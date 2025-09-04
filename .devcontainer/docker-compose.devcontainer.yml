@@ -1,0 +1,24 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile.dev
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
+      - BETTER_AUTH_SECRET=dev-secret-key-minimum-32-characters-long-for-security
+      - BETTER_AUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+      - REDIS_URL=redis://redis:6379
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - .:/app:cached
+      - /app/node_modules
+      - /app/.next
+    command: sleep infinity
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - kibo-network

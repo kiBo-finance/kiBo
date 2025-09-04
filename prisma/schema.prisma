@@ -1,0 +1,435 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// better-auth認証関連
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String?
+  image         String?
+  baseCurrency  String    @default("JPY")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // better-auth関連
+  sessions      Session[]
+  accounts      Account[]
+  
+  // アプリケーション関連リレーション
+  appAccounts         AppAccount[]
+  cards               Card[]
+  transactions        Transaction[]
+  scheduledTx         ScheduledTransaction[]
+  categories          Category[]
+  budgets             Budget[]
+  notificationSettings NotificationSettings[]
+  autoTransfers       AutoTransfer[]
+  
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  userId    String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  accountId         String
+  providerId        String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  scope             String?
+  id_token          String?
+  password          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification_tokens")
+}
+
+// 通貨マスター
+model Currency {
+  code      String  @id // 'JPY', 'USD', 'EUR'
+  symbol    String      // '¥', '$', '€'
+  name      String      // '日本円', '米ドル'
+  decimals  Int         // 0 for JPY, 2 for USD
+  isActive  Boolean @default(true)
+  
+  // リレーション
+  appAccounts      AppAccount[]
+  transactions     Transaction[]
+  scheduledTx      ScheduledTransaction[]
+  exchangeRatesFrom ExchangeRate[] @relation("FromCurrency")
+  exchangeRatesTo   ExchangeRate[] @relation("ToCurrency")
+  
+  @@map("currencies")
+}
+
+// 為替レート
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String
+  toCurrency   String
+  rate         Decimal  @db.Decimal(15,8)
+  timestamp    DateTime @default(now())
+  source       String?  // API source name
+  
+  // リレーション
+  fromCurrencyRef Currency @relation("FromCurrency", fields: [fromCurrency], references: [code])
+  toCurrencyRef   Currency @relation("ToCurrency", fields: [toCurrency], references: [code])
+  
+  @@unique([fromCurrency, toCurrency, timestamp])
+  @@map("exchange_rates")
+}
+
+// アプリケーション口座（家計簿用）
+model AppAccount {
+  id          String      @id @default(cuid())
+  name        String
+  type        AccountType
+  balance     Decimal     @db.Decimal(15,4)
+  currency    String
+  isActive    Boolean     @default(true)
+  description String?
+  userId      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // 定期預金用フィールド
+  fixedDepositRate     Decimal?  @db.Decimal(5,4) // 年利率
+  fixedDepositMaturity DateTime? // 満期日
+  
+  // リレーション
+  user            User         @relation(fields: [userId], references: [id])
+  currencyRef     Currency     @relation(fields: [currency], references: [code])
+  cards           Card[]
+  linkedCards     Card[]       @relation("LinkedCardAccount")
+  transactions    Transaction[]
+  scheduledTx     ScheduledTransaction[]
+  autoTransfersFrom AutoTransfer[] @relation("TransferFromAccount")
+  autoTransfersTo   AutoTransfer[] @relation("TransferToAccount")
+  
+  @@map("app_accounts")
+}
+
+enum AccountType {
+  CASH
+  CHECKING
+  SAVINGS
+  FIXED_DEPOSIT
+}
+
+// カード
+model Card {
+  id           String   @id @default(cuid())
+  name         String
+  type         CardType
+  brand        String?  // VISA, Mastercard, JCB, AMEX, etc.
+  lastFourDigits String @db.VarChar(4)
+  
+  // クレジットカード用
+  creditLimit  Decimal? @db.Decimal(15,4)
+  billingDate  Int?     // 締め日（1-31）
+  paymentDate  Int?     // 支払日（1-31）
+  
+  // プリペイドカード用
+  balance      Decimal? @db.Decimal(15,4) // 現在残高
+  
+  // デビットカード用
+  linkedAccountId String? // 紐付け銀行口座
+  autoTransferEnabled Boolean @default(false) // 自動振替有効
+  minBalance   Decimal? @db.Decimal(15,4) // 最低維持残高
+  
+  // ポストペイカード用
+  monthlyLimit Decimal? @db.Decimal(15,4) // 月間利用限度額
+  settlementDay Int?    // 精算日（1-31）
+  
+  accountId    String
+  userId       String
+  isActive     Boolean  @default(true)
+  expiryDate   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // リレーション
+  user         User          @relation(fields: [userId], references: [id])
+  account      AppAccount    @relation(fields: [accountId], references: [id])
+  linkedAccount AppAccount?  @relation("LinkedCardAccount", fields: [linkedAccountId], references: [id])
+  transactions Transaction[]
+  autoTransfers AutoTransfer[]
+  
+  @@map("cards")
+}
+
+enum CardType {
+  CREDIT   // クレジットカード
+  DEBIT    // デビットカード
+  PREPAID  // プリペイドカード
+  POSTPAY  // ポストペイカード（後払い）
+}
+
+// 自動振替記録
+model AutoTransfer {
+  id           String   @id @default(cuid())
+  cardId       String
+  fromAccountId String
+  toAccountId  String
+  amount       Decimal  @db.Decimal(15,4)
+  currency     String
+  reason       String   // 振替理由
+  status       AutoTransferStatus
+  executedAt   DateTime @default(now())
+  userId       String
+  
+  // リレーション
+  card         Card       @relation(fields: [cardId], references: [id])
+  fromAccount  AppAccount @relation("TransferFromAccount", fields: [fromAccountId], references: [id])
+  toAccount    AppAccount @relation("TransferToAccount", fields: [toAccountId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+  
+  @@map("auto_transfers")
+}
+
+enum AutoTransferStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// カテゴリ
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  color       String  @default("#6B7280")
+  icon        String  @default("tag")
+  type        TransactionType
+  userId      String
+  parentId    String? // サブカテゴリ用
+  isActive    Boolean @default(true)
+  
+  // リレーション
+  user         User          @relation(fields: [userId], references: [id])
+  parent       Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[]    @relation("CategoryHierarchy")
+  transactions Transaction[]
+  scheduledTx  ScheduledTransaction[]
+  budgets      Budget[]
+  
+  @@map("categories")
+}
+
+// 取引
+model Transaction {
+  id          String          @id @default(cuid())
+  amount      Decimal         @db.Decimal(15,4)
+  currency    String
+  type        TransactionType
+  description String
+  date        DateTime
+  accountId   String
+  cardId      String?
+  categoryId  String?
+  userId      String
+  
+  // 為替関連
+  exchangeRate     Decimal? @db.Decimal(15,8) // 記録時の為替レート
+  baseCurrencyAmount Decimal? @db.Decimal(15,4) // 基準通貨での金額
+  
+  // メタデータ
+  attachments String[] // ファイルパス配列
+  tags        String[]
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // リレーション
+  user        User         @relation(fields: [userId], references: [id])
+  account     AppAccount   @relation(fields: [accountId], references: [id])
+  card        Card?        @relation(fields: [cardId], references: [id])
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  currencyRef Currency     @relation(fields: [currency], references: [code])
+  
+  @@map("transactions")
+}
+
+// 予定取引（重要機能）
+model ScheduledTransaction {
+  id          String          @id @default(cuid())
+  amount      Decimal         @db.Decimal(15,4)
+  currency    String
+  type        TransactionType
+  description String
+  accountId   String
+  categoryId  String?
+  userId      String
+  
+  // スケジュール設定
+  dueDate     DateTime
+  frequency   ScheduleFrequency?
+  endDate     DateTime?
+  isRecurring Boolean         @default(false)
+  
+  // ステータス管理
+  status      ScheduledStatus @default(PENDING)
+  completedAt DateTime?
+  
+  // 通知設定
+  reminderDays Int @default(1) // 何日前に通知するか
+  isReminderSent Boolean @default(false)
+  
+  // メタデータ
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // リレーション
+  user        User         @relation(fields: [userId], references: [id])
+  account     AppAccount   @relation(fields: [accountId], references: [id])
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  currencyRef Currency     @relation(fields: [currency], references: [code])
+  
+  @@map("scheduled_transactions")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum ScheduleFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum ScheduledStatus {
+  PENDING
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+// 予算管理
+model Budget {
+  id         String   @id @default(cuid())
+  name       String
+  amount     Decimal  @db.Decimal(15,4)
+  currency   String
+  categoryId String
+  userId     String
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  
+  // リレーション
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+  
+  @@map("budgets")
+}
+
+// 通知設定
+model NotificationSettings {
+  id          String            @id @default(cuid())
+  userId      String
+  type        NotificationType  @default(DISABLED)
+  
+  // Webhook設定
+  webhookUrl  String?
+  webhookType WebhookType?      // SLACK or DISCORD
+  
+  // 通知対象
+  scheduledTransactionReminders Boolean @default(true)
+  overdueTransactions          Boolean @default(true)
+  budgetAlerts                Boolean @default(true)
+  
+  // メタデータ
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  // リレーション
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, type])
+  @@map("notification_settings")
+}
+
+model NotificationLog {
+  id              String               @id @default(cuid())
+  userId          String
+  type            NotificationType
+  webhookType     WebhookType?
+  title           String
+  message         String
+  status          NotificationStatus   @default(PENDING)
+  scheduledFor    DateTime?
+  sentAt          DateTime?
+  errorMessage    String?
+  retryCount      Int                  @default(0)
+  maxRetries      Int                  @default(3)
+  
+  // 関連エンティティ
+  scheduledTransactionId String?
+  budgetId              String?
+  
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  
+  @@map("notification_logs")
+}
+
+enum NotificationType {
+  DISABLED
+  WEBHOOK
+  EMAIL
+}
+
+enum WebhookType {
+  SLACK
+  DISCORD
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}

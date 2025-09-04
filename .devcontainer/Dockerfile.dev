@@ -1,0 +1,81 @@
+# DevContainer専用Dockerfile
+FROM node:20-alpine
+
+# Install essential development tools
+RUN apk add --no-cache \
+    git \
+    curl \
+    bash \
+    openssh-client \
+    postgresql-client \
+    redis \
+    sudo
+
+# Create non-root user
+ARG USERNAME=node
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# Configure sudo for the user
+RUN echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Set working directory and fix ownership
+WORKDIR /app
+RUN chown -R $USERNAME:$USERNAME /app
+
+# Switch to non-root user early
+USER $USERNAME
+
+# Copy package files (from parent directory)
+COPY --chown=$USERNAME:$USERNAME ../package*.json ./
+
+# Install dependencies as node user
+RUN npm ci
+
+# Install global development tools (as root, then switch back)
+USER root
+RUN npm install -g \
+    tsx \
+    prisma \
+    @biomejs/biome
+USER $USERNAME
+
+# Copy source code (from parent directory)
+COPY --chown=$USERNAME:$USERNAME ../ .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Create and set permissions for .next directory
+RUN mkdir -p /app/.next && chown -R $USERNAME:$USERNAME /app/.next
+
+# Switch to root to create welcome script
+USER root
+# Create welcome script
+RUN echo '#!/bin/bash\n\
+echo "🚀 kiBoアプリ DevContainer Ready!"\n\
+echo ""\n\
+echo "Available commands:"\n\
+echo "  npm run dev          - Start development server (port 3000)"\n\
+echo "  npm run test         - Run tests"\n\
+echo "  npm run lint         - Check code quality"\n\
+echo "  npm run db:push      - Push database schema"\n\
+echo "  npm run db:studio    - Open Prisma Studio manually"\n\
+echo "  npm run services:start - Start background services"\n\
+echo "  npm run services:stop  - Stop background services"\n\
+echo ""\n\
+echo "Access URLs:"\n\
+echo "  App:           http://localhost:3000"\n\
+echo "  Prisma Studio: http://localhost:5555"\n\
+echo ""' > /usr/local/bin/welcome.sh \
+    && chmod +x /usr/local/bin/welcome.sh
+
+# Set default shell
+SHELL ["/bin/bash", "-c"]
+
+# Switch back to non-root user for runtime
+USER $USERNAME
+
+# Default command
+CMD ["sleep", "infinity"]

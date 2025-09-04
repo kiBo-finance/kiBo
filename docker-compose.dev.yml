@@ -1,0 +1,17 @@
+services:
+  migrate:
+    image: node:20-alpine
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
+    volumes:
+      - .:/app
+    networks:
+      - kibo_kibo-network
+    command: sh -c "npm install && npx prisma db push"
+    profiles:
+      - migration
+
+networks:
+  kibo_kibo-network:
+    external: true

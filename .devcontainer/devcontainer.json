@@ -1,0 +1,83 @@
+{
+  "name": "kiBoアプリ Development",
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "../.devcontainer/docker-compose.devcontainer.yml"
+  ],
+  "service": "app",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "prisma.prisma",
+        "biomejs.biome",
+        "ms-vscode.vscode-json",
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright",
+        "ms-vscode.vscode-eslint",
+        "dbaeumer.vscode-eslint",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer",
+        "firsttris.vscode-jest-runner",
+        "orta.vscode-jest",
+        "ms-vscode.vscode-docker",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "typescript.preferences.quoteStyle": "single",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "biomejs.biome",
+        "tailwindCSS.includeLanguages": {
+          "typescript": "typescript",
+          "typescriptreact": "typescriptreact"
+        },
+        "files.associations": {
+          ".env*": "properties"
+        },
+        "typescript.suggest.autoImports": true,
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "jest.autoRun": {
+          "watch": false,
+          "onStartup": [
+            "all-tests"
+          ]
+        },
+        "jest.showCoverageOnLoad": true
+      }
+    }
+  },
+  "forwardPorts": [
+    3000,
+    5432,
+    6379,
+    5555
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "kiBoアプリ",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL"
+    },
+    "6379": {
+      "label": "Redis"
+    },
+    "5555": {
+      "label": "Prisma Studio",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "sudo chown -R node:node /app && sudo chmod -R 755 /app && chmod +x /app/scripts/start-services.sh && npm install && npx prisma generate && /app/scripts/start-services.sh",
+  "remoteUser": "node",
+  "containerUser": "node"
+}
