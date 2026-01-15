@@ -184,7 +184,7 @@ export function CreateAccountForm({ className, onSuccess, onCancel }: CreateAcco
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>口座種別 *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="口座種別を選択" />

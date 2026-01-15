@@ -245,7 +245,7 @@ export function AccountCreateDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>通貨</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="cursor-pointer">
                           <SelectValue placeholder="通貨を選択" />
