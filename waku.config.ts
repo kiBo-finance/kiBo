@@ -18,7 +18,14 @@ const config = {
       },
       build: {
         rollupOptions: {
-          external: ['@prisma/client', /^@prisma\/.*/],
+          external: ['@prisma/client', /^@prisma\/.*/, /^\.prisma\/.*/],
+          onwarn(warning, warn) {
+            // Suppress Prisma external dependency warnings
+            if (warning.code === 'UNRESOLVED_IMPORT' && warning.exporter?.includes('.prisma')) {
+              return
+            }
+            warn(warning)
+          },
         },
       },
       optimizeDeps: {
