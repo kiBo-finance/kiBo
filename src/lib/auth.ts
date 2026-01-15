@@ -54,6 +54,10 @@ export const auth = betterAuth({
   basePath: '/api/auth',
   baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3000',
   secret: process.env.BETTER_AUTH_SECRET!,
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL || 'http://localhost:3000',
+    'https://kibo.bktsk.com',
+  ],
   plugins: [
     // 将来的な拡張用
   ],
