@@ -1,5 +1,5 @@
-import { auth } from '../../../lib/auth'
-import { prisma } from '../../../lib/db'
+import { auth } from '../../../../lib/auth'
+import { prisma } from '../../../../lib/db'
 import { z } from 'zod'
 
 const createCurrencySchema = z.object({

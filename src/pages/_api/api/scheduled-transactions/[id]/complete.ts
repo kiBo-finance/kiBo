@@ -1,6 +1,6 @@
-import { auth } from '../../../../lib/auth'
-import { prisma } from '../../../../lib/db'
-import type { SessionUser } from '../../../../lib/types/auth'
+import { auth } from '../../../../../lib/auth'
+import { prisma } from '../../../../../lib/db'
+import type { SessionUser } from '../../../../../lib/types/auth'
 import { Decimal } from 'decimal.js'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {

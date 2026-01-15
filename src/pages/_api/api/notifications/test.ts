@@ -1,6 +1,6 @@
-import { auth } from '../../../lib/auth'
-import { WebhookNotificationService } from '../../../lib/notifications/webhook-service'
-import type { SessionUser } from '../../../lib/types/auth'
+import { auth } from '../../../../lib/auth'
+import { WebhookNotificationService } from '../../../../lib/notifications/webhook-service'
+import type { SessionUser } from '../../../../lib/types/auth'
 
 export async function POST(request: Request) {
   try {

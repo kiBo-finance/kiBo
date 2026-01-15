@@ -1,4 +1,4 @@
-import { auth } from '../../../lib/auth'
+import { auth } from '../../../../lib/auth'
 
 // better-auth provides a handler that works with standard Request/Response
 export async function GET(request: Request): Promise<Response> {

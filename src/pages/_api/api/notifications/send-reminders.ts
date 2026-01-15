@@ -1,5 +1,5 @@
-import { auth } from '../../../lib/auth'
-import { ReminderService } from '../../../lib/notifications/reminder-service'
+import { auth } from '../../../../lib/auth'
+import { ReminderService } from '../../../../lib/notifications/reminder-service'
 
 // 認証が必要（管理者または特定のAPIキー）
 export async function POST(request: Request) {
