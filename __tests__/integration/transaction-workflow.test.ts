@@ -1,103 +1,129 @@
-/**
- * @jest-environment node
- */
-import { NextRequest } from 'next/server'
-import { POST as createTransaction, GET as getTransactions } from '@/app/api/transactions/route'
-import { POST as createScheduled, GET as getScheduled } from '@/app/api/scheduled-transactions/route'
-import { POST as executeScheduled } from '@/app/api/scheduled-transactions/[id]/route'
-import { prisma } from '@/lib/db'
+import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import Decimal from 'decimal.js'
 
-// Mock global Request if not available
-if (typeof global.Request === 'undefined') {
-  const { Request } = require('node-fetch')
-  global.Request = Request
-}
+// Define mock functions at the top level
+const mockGetSession = mock(() => Promise.resolve(null))
+const mockTransactionCreate = mock(() => Promise.resolve(null))
+const mockTransactionFindMany = mock(() => Promise.resolve([]))
+const mockTransactionCount = mock(() => Promise.resolve(0))
+const mockScheduledTransactionCreate = mock(() => Promise.resolve(null))
+const mockScheduledTransactionFindMany = mock(() => Promise.resolve([]))
+const mockScheduledTransactionFindFirst = mock(() => Promise.resolve(null))
+const mockScheduledTransactionCount = mock(() => Promise.resolve(0))
+const mockScheduledTransactionUpdateMany = mock(() => Promise.resolve({ count: 0 }))
+const mockCurrencyFindUnique = mock(() => Promise.resolve(null))
+const mockAppAccountFindFirst = mock(() => Promise.resolve(null))
+const mockAppAccountUpdate = mock(() => Promise.resolve(null))
+const mockCategoryFindFirst = mock(() => Promise.resolve(null))
+const mockDbTransaction = mock(() => Promise.resolve(null))
 
-// Mock dependencies
-jest.mock('@/lib/auth')
-jest.mock('@/lib/db', () => ({
+// Mock dependencies before importing
+mock.module('~/lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: mockGetSession,
+    },
+  },
+}))
+
+mock.module('~/lib/db', () => ({
   prisma: {
     transaction: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      count: jest.fn(),
+      create: mockTransactionCreate,
+      findMany: mockTransactionFindMany,
+      count: mockTransactionCount,
     },
     scheduledTransaction: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      count: jest.fn(),
-      updateMany: jest.fn(),
+      create: mockScheduledTransactionCreate,
+      findMany: mockScheduledTransactionFindMany,
+      findFirst: mockScheduledTransactionFindFirst,
+      count: mockScheduledTransactionCount,
+      updateMany: mockScheduledTransactionUpdateMany,
     },
     currency: {
-      findUnique: jest.fn(),
+      findUnique: mockCurrencyFindUnique,
     },
     appAccount: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
+      findFirst: mockAppAccountFindFirst,
+      update: mockAppAccountUpdate,
     },
     category: {
-      findFirst: jest.fn(),
+      findFirst: mockCategoryFindFirst,
     },
-    $transaction: jest.fn(),
-  }
+    $transaction: mockDbTransaction,
+  },
 }))
 
-jest.mock('next/headers', () => ({
-  headers: jest.fn(() => Promise.resolve({}))
+mock.module('next/headers', () => ({
+  headers: mock(() => Promise.resolve({})),
 }))
 
-const mockAuth = {
-  api: {
-    getSession: jest.fn()
-  }
-}
-
-require('@/lib/auth').auth = mockAuth
+import { POST as executeScheduled } from '~/pages/_api/scheduled-transactions/[id]'
+import {
+  POST as createScheduled,
+  GET as getScheduled,
+} from '~/pages/_api/scheduled-transactions/index'
+import { POST as createTransaction, GET as getTransactions } from '~/pages/_api/transactions/index'
+import { prisma } from '~/lib/db'
 
 // Mock data
 const mockUser = {
   id: 'user-1',
-  email: 'test@example.com'
+  email: 'test@example.com',
 }
 
 const mockSession = {
-  user: mockUser
+  user: mockUser,
 }
 
 const mockCurrency = {
   code: 'JPY',
-  symbol: '¥',
-  name: '日本円',
+  symbol: '\u00a5',
+  name: '\u65e5\u672c\u5186',
   decimals: 0,
-  isActive: true
+  isActive: true,
 }
 
 const mockAccount = {
   id: 'account-1',
-  name: 'メイン口座',
+  name: '\u30e1\u30a4\u30f3\u53e3\u5ea7',
   type: 'CHECKING',
   balance: new Decimal('100000'),
   currency: 'JPY',
   userId: 'user-1',
-  currencyRef: mockCurrency
+  currencyRef: mockCurrency,
 }
 
 const mockCategory = {
   id: 'category-1',
-  name: '食費',
+  name: '\u98df\u8cbb',
   type: 'EXPENSE',
-  userId: 'user-1'
+  userId: 'user-1',
 }
 
 describe('Transaction Workflow Integration Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockAuth.api.getSession.mockResolvedValue(mockSession)
-    ;(prisma.currency.findUnique as jest.Mock).mockResolvedValue(mockCurrency)
-    ;(prisma.appAccount.findFirst as jest.Mock).mockResolvedValue(mockAccount)
-    ;(prisma.category.findFirst as jest.Mock).mockResolvedValue(mockCategory)
+    // Reset all mocks
+    mockGetSession.mockReset()
+    mockTransactionCreate.mockReset()
+    mockTransactionFindMany.mockReset()
+    mockTransactionCount.mockReset()
+    mockScheduledTransactionCreate.mockReset()
+    mockScheduledTransactionFindMany.mockReset()
+    mockScheduledTransactionFindFirst.mockReset()
+    mockScheduledTransactionCount.mockReset()
+    mockScheduledTransactionUpdateMany.mockReset()
+    mockCurrencyFindUnique.mockReset()
+    mockAppAccountFindFirst.mockReset()
+    mockAppAccountUpdate.mockReset()
+    mockCategoryFindFirst.mockReset()
+    mockDbTransaction.mockReset()
+
+    // Set default implementations
+    mockGetSession.mockImplementation(() => Promise.resolve(mockSession))
+    mockCurrencyFindUnique.mockImplementation(() => Promise.resolve(mockCurrency))
+    mockAppAccountFindFirst.mockImplementation(() => Promise.resolve(mockAccount))
+    mockCategoryFindFirst.mockImplementation(() => Promise.resolve(mockCategory))
   })
 
   describe('Complete Transaction Lifecycle', () => {
@@ -107,36 +133,38 @@ describe('Transaction Workflow Integration Tests', () => {
         amount: new Decimal('5000'),
         currency: 'JPY',
         type: 'EXPENSE',
-        description: 'ランチ',
+        description: '\u30e9\u30f3\u30c1',
         date: new Date('2024-01-15'),
         accountId: 'account-1',
         userId: 'user-1',
         account: {
           ...mockAccount,
-          currencyRef: mockCurrency
+          currencyRef: mockCurrency,
         },
         category: mockCategory,
-        currencyRef: mockCurrency
+        currencyRef: mockCurrency,
       }
 
-      ;(prisma.transaction.create as jest.Mock).mockResolvedValue(mockTransaction)
-      ;(prisma.appAccount.update as jest.Mock).mockResolvedValue({
-        ...mockAccount,
-        balance: new Decimal('95000')
-      })
+      mockTransactionCreate.mockImplementation(() => Promise.resolve(mockTransaction))
+      mockAppAccountUpdate.mockImplementation(() =>
+        Promise.resolve({
+          ...mockAccount,
+          balance: new Decimal('95000'),
+        })
+      )
 
-      const request = new NextRequest('http://localhost:3000/api/transactions', {
+      const request = new Request('http://localhost:3000/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: 5000,
           currency: 'JPY',
           type: 'EXPENSE',
-          description: 'ランチ',
+          description: '\u30e9\u30f3\u30c1',
           date: '2024-01-15T12:00:00.000Z',
           accountId: 'account-1',
-          categoryId: 'category-1'
-        })
+          categoryId: 'category-1',
+        }),
       })
 
       const response = await createTransaction(request)
@@ -145,15 +173,15 @@ describe('Transaction Workflow Integration Tests', () => {
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.amount).toBe('5000')
-      
+
       // Verify account balance was decremented for expense
       expect(prisma.appAccount.update).toHaveBeenCalledWith({
         where: { id: 'account-1' },
         data: {
           balance: {
-            increment: -5000
-          }
-        }
+            increment: -5000,
+          },
+        },
       })
     })
 
@@ -163,36 +191,38 @@ describe('Transaction Workflow Integration Tests', () => {
         amount: new Decimal('300000'),
         currency: 'JPY',
         type: 'INCOME',
-        description: '給与',
+        description: '\u7d66\u4e0e',
         date: new Date('2024-01-31'),
         accountId: 'account-1',
         userId: 'user-1',
         account: {
           ...mockAccount,
-          currencyRef: mockCurrency
+          currencyRef: mockCurrency,
         },
         category: mockCategory,
-        currencyRef: mockCurrency
+        currencyRef: mockCurrency,
       }
 
-      ;(prisma.transaction.create as jest.Mock).mockResolvedValue(mockIncomeTransaction)
-      ;(prisma.appAccount.update as jest.Mock).mockResolvedValue({
-        ...mockAccount,
-        balance: new Decimal('400000')
-      })
+      mockTransactionCreate.mockImplementation(() => Promise.resolve(mockIncomeTransaction))
+      mockAppAccountUpdate.mockImplementation(() =>
+        Promise.resolve({
+          ...mockAccount,
+          balance: new Decimal('400000'),
+        })
+      )
 
-      const request = new NextRequest('http://localhost:3000/api/transactions', {
+      const request = new Request('http://localhost:3000/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: 300000,
           currency: 'JPY',
           type: 'INCOME',
-          description: '給与',
+          description: '\u7d66\u4e0e',
           date: '2024-01-31T12:00:00.000Z',
           accountId: 'account-1',
-          categoryId: 'category-1'
-        })
+          categoryId: 'category-1',
+        }),
       })
 
       const response = await createTransaction(request)
@@ -200,15 +230,15 @@ describe('Transaction Workflow Integration Tests', () => {
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      
+
       // Verify account balance was incremented for income
       expect(prisma.appAccount.update).toHaveBeenCalledWith({
         where: { id: 'account-1' },
         data: {
           balance: {
-            increment: 300000
-          }
-        }
+            increment: 300000,
+          },
+        },
       })
     })
   })
@@ -221,7 +251,7 @@ describe('Transaction Workflow Integration Tests', () => {
         amount: new Decimal('15000'),
         currency: 'JPY',
         type: 'EXPENSE',
-        description: '光熱費',
+        description: '\u5149\u71b1\u8cbb',
         accountId: 'account-1',
         categoryId: 'category-1',
         userId: 'user-1',
@@ -231,22 +261,24 @@ describe('Transaction Workflow Integration Tests', () => {
         isRecurring: true,
         status: 'PENDING',
         reminderDays: 3,
-        notes: '電気代',
+        notes: '\u96fb\u6c17\u4ee3',
         account: mockAccount,
         category: mockCategory,
-        currencyRef: mockCurrency
+        currencyRef: mockCurrency,
       }
 
-      ;(prisma.scheduledTransaction.create as jest.Mock).mockResolvedValue(mockScheduledTransaction)
+      mockScheduledTransactionCreate.mockImplementation(() =>
+        Promise.resolve(mockScheduledTransaction)
+      )
 
-      const createRequest = new NextRequest('http://localhost:3000/api/scheduled-transactions', {
+      const createRequest = new Request('http://localhost:3000/api/scheduled-transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: 15000,
           currency: 'JPY',
           type: 'EXPENSE',
-          description: '光熱費',
+          description: '\u5149\u71b1\u8cbb',
           accountId: 'account-1',
           categoryId: 'category-1',
           dueDate: '2024-02-15T00:00:00.000Z',
@@ -254,8 +286,8 @@ describe('Transaction Workflow Integration Tests', () => {
           endDate: '2024-12-31T23:59:59.999Z',
           isRecurring: true,
           reminderDays: 3,
-          notes: '電気代'
-        })
+          notes: '\u96fb\u6c17\u4ee3',
+        }),
       })
 
       const createResponse = await createScheduled(createRequest)
@@ -263,57 +295,63 @@ describe('Transaction Workflow Integration Tests', () => {
 
       expect(createResponse.status).toBe(200)
       expect(createData.success).toBe(true)
-      expect(createData.data.description).toBe('光熱費')
+      expect(createData.data.description).toBe('\u5149\u71b1\u8cbb')
       expect(createData.data.isRecurring).toBe(true)
 
       // Step 2: Execute the scheduled transaction
-      ;(prisma.scheduledTransaction.findFirst as jest.Mock).mockResolvedValue(mockScheduledTransaction)
+      mockScheduledTransactionFindFirst.mockImplementation(() =>
+        Promise.resolve(mockScheduledTransaction)
+      )
 
       const mockExecutedTransaction = {
         id: 'tx-3',
         amount: new Decimal('15000'),
         currency: 'JPY',
         type: 'EXPENSE',
-        description: '光熱費 (予定取引実行)',
+        description: '\u5149\u71b1\u8cbb (\u4e88\u5b9a\u53d6\u5f15\u5b9f\u884c)',
         date: new Date('2024-02-15'),
         accountId: 'account-1',
         userId: 'user-1',
         account: mockAccount,
         currencyRef: mockCurrency,
         exchangeRate: null,
-        baseCurrencyAmount: null
+        baseCurrencyAmount: null,
       }
 
       const mockNextScheduled = {
         ...mockScheduledTransaction,
         id: 'scheduled-2',
-        dueDate: new Date('2024-03-15')
+        dueDate: new Date('2024-03-15'),
       }
 
-      const mockTransactionFn = jest.fn().mockImplementation(async (callback) => {
+      mockDbTransaction.mockImplementation(async () => {
         return {
           transaction: mockExecutedTransaction,
           scheduledTransaction: { ...mockScheduledTransaction, status: 'COMPLETED' },
-          nextScheduledTransaction: mockNextScheduled
+          nextScheduledTransaction: mockNextScheduled,
         }
       })
-      ;(prisma.$transaction as jest.Mock).mockImplementation(mockTransactionFn)
 
-      const executeRequest = new NextRequest('http://localhost:3000/api/scheduled-transactions/scheduled-1', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          executeDate: '2024-02-15T10:00:00.000Z',
-          createRecurring: true
-        })
+      const executeRequest = new Request(
+        'http://localhost:3000/api/scheduled-transactions/scheduled-1',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            executeDate: '2024-02-15T10:00:00.000Z',
+            createRecurring: true,
+          }),
+        }
+      )
+
+      const executeResponse = await executeScheduled(executeRequest, {
+        params: { id: 'scheduled-1' },
       })
-
-      const executeResponse = await executeScheduled(executeRequest, { params: { id: 'scheduled-1' } })
       const executeData = await executeResponse.json()
 
       expect(executeResponse.status).toBe(200)
       expect(executeData.success).toBe(true)
-      expect(executeData.message).toBe('予定取引が実行されました')
+      expect(executeData.message).toBe('\u4e88\u5b9a\u53d6\u5f15\u304c\u5b9f\u884c\u3055\u308c\u307e\u3057\u305f')
       expect(executeData.data.nextScheduledTransaction).toBeTruthy()
 
       // Verify that the transaction execution logic is called within the database transaction
@@ -326,17 +364,19 @@ describe('Transaction Workflow Integration Tests', () => {
         amount: new Decimal('50000'),
         currency: 'JPY',
         type: 'EXPENSE',
-        description: '一時的な支払い',
+        description: '\u4e00\u6642\u7684\u306a\u652f\u6255\u3044',
         accountId: 'account-1',
         userId: 'user-1',
         dueDate: new Date('2024-02-01'),
         frequency: null,
         endDate: null,
         isRecurring: false,
-        status: 'PENDING'
+        status: 'PENDING',
       }
 
-      ;(prisma.scheduledTransaction.findFirst as jest.Mock).mockResolvedValue(nonRecurringScheduled)
+      mockScheduledTransactionFindFirst.mockImplementation(() =>
+        Promise.resolve(nonRecurringScheduled)
+      )
 
       const mockExecutedTransaction = {
         id: 'tx-4',
@@ -344,27 +384,31 @@ describe('Transaction Workflow Integration Tests', () => {
         account: mockAccount,
         currencyRef: mockCurrency,
         exchangeRate: null,
-        baseCurrencyAmount: null
+        baseCurrencyAmount: null,
       }
 
-      const mockTransactionFn = jest.fn().mockImplementation(async (callback) => {
+      mockDbTransaction.mockImplementation(async () => {
         return {
           transaction: mockExecutedTransaction,
           scheduledTransaction: { ...nonRecurringScheduled, status: 'COMPLETED' },
-          nextScheduledTransaction: null
+          nextScheduledTransaction: null,
         }
       })
-      ;(prisma.$transaction as jest.Mock).mockImplementation(mockTransactionFn)
 
-      const executeRequest = new NextRequest('http://localhost:3000/api/scheduled-transactions/scheduled-one-time', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          createRecurring: false
-        })
+      const executeRequest = new Request(
+        'http://localhost:3000/api/scheduled-transactions/scheduled-one-time',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            createRecurring: false,
+          }),
+        }
+      )
+
+      const executeResponse = await executeScheduled(executeRequest, {
+        params: { id: 'scheduled-one-time' },
       })
-
-      const executeResponse = await executeScheduled(executeRequest, { params: { id: 'scheduled-one-time' } })
       const executeData = await executeResponse.json()
 
       expect(executeResponse.status).toBe(200)
@@ -379,36 +423,40 @@ describe('Transaction Workflow Integration Tests', () => {
           id: 'tx-1',
           amount: new Decimal('5000'),
           type: 'EXPENSE',
-          description: 'ランチ',
+          description: '\u30e9\u30f3\u30c1',
           date: new Date('2024-01-15'),
           account: mockAccount,
-          currencyRef: mockCurrency
+          currencyRef: mockCurrency,
         },
         {
           id: 'tx-2',
           amount: new Decimal('300000'),
           type: 'INCOME',
-          description: '給与',
+          description: '\u7d66\u4e0e',
           date: new Date('2024-01-31'),
           account: mockAccount,
-          currencyRef: mockCurrency
+          currencyRef: mockCurrency,
         },
         {
           id: 'tx-3',
           amount: new Decimal('3000'),
           type: 'EXPENSE',
-          description: 'コーヒー',
+          description: '\u30b3\u30fc\u30d2\u30fc',
           date: new Date('2024-01-16'),
           account: mockAccount,
-          currencyRef: mockCurrency
-        }
+          currencyRef: mockCurrency,
+        },
       ]
 
       // Test filtering by type
-      ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([mockTransactions[0], mockTransactions[2]])
-      ;(prisma.transaction.count as jest.Mock).mockResolvedValue(2)
+      mockTransactionFindMany.mockImplementation(() =>
+        Promise.resolve([mockTransactions[0], mockTransactions[2]])
+      )
+      mockTransactionCount.mockImplementation(() => Promise.resolve(2))
 
-      const filterRequest = new NextRequest('http://localhost:3000/api/transactions?type=EXPENSE&page=1&limit=20')
+      const filterRequest = new Request(
+        'http://localhost:3000/api/transactions?type=EXPENSE&page=1&limit=20'
+      )
       const filterResponse = await getTransactions(filterRequest)
       const filterData = await filterResponse.json()
 
@@ -421,12 +469,12 @@ describe('Transaction Workflow Integration Tests', () => {
       expect(prisma.transaction.findMany).toHaveBeenCalledWith({
         where: {
           userId: 'user-1',
-          type: 'EXPENSE'
+          type: 'EXPENSE',
         },
         include: expect.any(Object),
         orderBy: { date: 'desc' },
         skip: 0,
-        take: 20
+        take: 20,
       })
     })
 
@@ -436,17 +484,17 @@ describe('Transaction Workflow Integration Tests', () => {
           id: 'tx-1',
           amount: new Decimal('5000'),
           type: 'EXPENSE',
-          description: 'ランチ代',
+          description: '\u30e9\u30f3\u30c1\u4ee3',
           date: new Date('2024-01-15'),
           account: mockAccount,
-          currencyRef: mockCurrency
-        }
+          currencyRef: mockCurrency,
+        },
       ]
 
-      ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue(mockSearchResults)
-      ;(prisma.transaction.count as jest.Mock).mockResolvedValue(1)
+      mockTransactionFindMany.mockImplementation(() => Promise.resolve(mockSearchResults))
+      mockTransactionCount.mockImplementation(() => Promise.resolve(1))
 
-      const searchRequest = new NextRequest('http://localhost:3000/api/transactions?search=ランチ')
+      const searchRequest = new Request('http://localhost:3000/api/transactions?search=\u30e9\u30f3\u30c1')
       const searchResponse = await getTransactions(searchRequest)
       const searchData = await searchResponse.json()
 
@@ -458,26 +506,28 @@ describe('Transaction Workflow Integration Tests', () => {
         where: {
           userId: 'user-1',
           OR: [
-            { description: { contains: 'ランチ', mode: 'insensitive' } },
-            { notes: { contains: 'ランチ', mode: 'insensitive' } },
-            { tags: { has: 'ランチ' } }
-          ]
+            { description: { contains: '\u30e9\u30f3\u30c1', mode: 'insensitive' } },
+            { notes: { contains: '\u30e9\u30f3\u30c1', mode: 'insensitive' } },
+            { tags: { has: '\u30e9\u30f3\u30c1' } },
+          ],
         },
         include: expect.any(Object),
         orderBy: { date: 'desc' },
         skip: 0,
-        take: 20
+        take: 20,
       })
     })
 
     it('should handle date range filtering correctly', async () => {
-      ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
-      ;(prisma.transaction.count as jest.Mock).mockResolvedValue(0)
+      mockTransactionFindMany.mockImplementation(() => Promise.resolve([]))
+      mockTransactionCount.mockImplementation(() => Promise.resolve(0))
 
       const startDate = '2024-01-01T00:00:00.000Z'
       const endDate = '2024-01-31T23:59:59.999Z'
-      const dateRangeRequest = new NextRequest(`http://localhost:3000/api/transactions?startDate=${startDate}&endDate=${endDate}`)
-      
+      const dateRangeRequest = new Request(
+        `http://localhost:3000/api/transactions?startDate=${startDate}&endDate=${endDate}`
+      )
+
       const dateRangeResponse = await getTransactions(dateRangeRequest)
       expect(dateRangeResponse.status).toBe(200)
 
@@ -487,13 +537,13 @@ describe('Transaction Workflow Integration Tests', () => {
           userId: 'user-1',
           date: {
             gte: new Date(startDate),
-            lte: new Date(endDate)
-          }
+            lte: new Date(endDate),
+          },
         },
         include: expect.any(Object),
         orderBy: { date: 'desc' },
         skip: 0,
-        take: 20
+        take: 20,
       })
     })
   })
@@ -503,34 +553,42 @@ describe('Transaction Workflow Integration Tests', () => {
       const mockScheduledTransactions = [
         {
           id: 'scheduled-1',
-          description: '光熱費',
+          amount: new Decimal('15000'),
+          currency: 'JPY',
+          description: '\u5149\u71b1\u8cbb',
           type: 'EXPENSE',
           status: 'PENDING',
           isRecurring: true,
           frequency: 'MONTHLY',
           dueDate: new Date('2024-02-15'),
           account: mockAccount,
-          currencyRef: mockCurrency
+          currencyRef: mockCurrency,
         },
         {
           id: 'scheduled-2',
-          description: '給与',
+          amount: new Decimal('300000'),
+          currency: 'JPY',
+          description: '\u7d66\u4e0e',
           type: 'INCOME',
           status: 'PENDING',
           isRecurring: true,
           frequency: 'MONTHLY',
           dueDate: new Date('2024-02-25'),
           account: mockAccount,
-          currencyRef: mockCurrency
-        }
+          currencyRef: mockCurrency,
+        },
       ]
 
-      ;(prisma.scheduledTransaction.findMany as jest.Mock).mockResolvedValue([mockScheduledTransactions[0]])
-      ;(prisma.scheduledTransaction.count as jest.Mock).mockResolvedValue(1)
-      ;(prisma.scheduledTransaction.updateMany as jest.Mock).mockResolvedValue({ count: 0 })
+      mockScheduledTransactionFindMany.mockImplementation(() =>
+        Promise.resolve([mockScheduledTransactions[0]])
+      )
+      mockScheduledTransactionCount.mockImplementation(() => Promise.resolve(1))
+      mockScheduledTransactionUpdateMany.mockImplementation(() => Promise.resolve({ count: 0 }))
 
       // Filter by type
-      const filterRequest = new NextRequest('http://localhost:3000/api/scheduled-transactions?type=EXPENSE')
+      const filterRequest = new Request(
+        'http://localhost:3000/api/scheduled-transactions?type=EXPENSE'
+      )
       const filterResponse = await getScheduled(filterRequest)
       const filterData = await filterResponse.json()
 
@@ -540,24 +598,21 @@ describe('Transaction Workflow Integration Tests', () => {
       expect(prisma.scheduledTransaction.findMany).toHaveBeenCalledWith({
         where: {
           userId: 'user-1',
-          type: 'EXPENSE'
+          type: 'EXPENSE',
         },
         include: expect.any(Object),
-        orderBy: [
-          { status: 'asc' },
-          { dueDate: 'asc' }
-        ],
+        orderBy: [{ status: 'asc' }, { dueDate: 'asc' }],
         skip: 0,
-        take: 20
+        take: 20,
       })
     })
 
     it('should automatically update overdue scheduled transactions', async () => {
-      ;(prisma.scheduledTransaction.findMany as jest.Mock).mockResolvedValue([])
-      ;(prisma.scheduledTransaction.count as jest.Mock).mockResolvedValue(0)
-      ;(prisma.scheduledTransaction.updateMany as jest.Mock).mockResolvedValue({ count: 2 })
+      mockScheduledTransactionFindMany.mockImplementation(() => Promise.resolve([]))
+      mockScheduledTransactionCount.mockImplementation(() => Promise.resolve(0))
+      mockScheduledTransactionUpdateMany.mockImplementation(() => Promise.resolve({ count: 2 }))
 
-      const getRequest = new NextRequest('http://localhost:3000/api/scheduled-transactions')
+      const getRequest = new Request('http://localhost:3000/api/scheduled-transactions')
       const getResponse = await getScheduled(getRequest)
 
       expect(getResponse.status).toBe(200)
@@ -568,12 +623,12 @@ describe('Transaction Workflow Integration Tests', () => {
           userId: 'user-1',
           status: 'PENDING',
           dueDate: {
-            lt: expect.any(Date)
-          }
+            lt: expect.any(Date),
+          },
         },
         data: {
-          status: 'OVERDUE'
-        }
+          status: 'OVERDUE',
+        },
       })
     })
   })
@@ -581,27 +636,27 @@ describe('Transaction Workflow Integration Tests', () => {
   describe('Error Handling Workflow', () => {
     it('should handle validation errors throughout the workflow', async () => {
       // Test transaction creation with missing required fields
-      const invalidRequest = new NextRequest('http://localhost:3000/api/transactions', {
+      const invalidRequest = new Request('http://localhost:3000/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           // Missing required fields like amount, currency, etc.
-          description: 'Invalid transaction'
-        })
+          description: 'Invalid transaction',
+        }),
       })
 
       const response = await createTransaction(invalidRequest)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('バリデーションエラー')
+      expect(data.error).toBe('\u30d0\u30ea\u30c7\u30fc\u30b7\u30e7\u30f3\u30a8\u30e9\u30fc')
       expect(data.details).toBeDefined()
     })
 
     it('should handle non-existent account references', async () => {
-      ;(prisma.appAccount.findFirst as jest.Mock).mockResolvedValue(null)
+      mockAppAccountFindFirst.mockImplementation(() => Promise.resolve(null))
 
-      const request = new NextRequest('http://localhost:3000/api/transactions', {
+      const request = new Request('http://localhost:3000/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -610,36 +665,36 @@ describe('Transaction Workflow Integration Tests', () => {
           type: 'EXPENSE',
           description: 'Test',
           date: '2024-01-15T12:00:00.000Z',
-          accountId: 'nonexistent-account'
-        })
+          accountId: 'nonexistent-account',
+        }),
       })
 
       const response = await createTransaction(request)
       const data = await response.json()
 
       expect(response.status).toBe(404)
-      expect(data.error).toBe('指定された口座が見つかりません')
+      expect(data.error).toBe('\u6307\u5b9a\u3055\u308c\u305f\u53e3\u5ea7\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093')
     })
 
     it('should handle unauthorized requests', async () => {
-      mockAuth.api.getSession.mockResolvedValue(null)
+      mockGetSession.mockImplementation(() => Promise.resolve(null))
 
-      const request = new NextRequest('http://localhost:3000/api/transactions', {
+      const request = new Request('http://localhost:3000/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: 5000,
           currency: 'JPY',
           type: 'EXPENSE',
-          description: 'Test'
-        })
+          description: 'Test',
+        }),
       })
 
       const response = await createTransaction(request)
       const data = await response.json()
 
       expect(response.status).toBe(401)
-      expect(data.error).toBe('認証が必要です')
+      expect(data.error).toBe('\u8a8d\u8a3c\u304c\u5fc5\u8981\u3067\u3059')
     })
   })
 })

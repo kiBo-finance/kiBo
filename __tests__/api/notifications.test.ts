@@ -1,65 +1,78 @@
-/**
- * @jest-environment node
- */
-import { NextRequest } from 'next/server'
-import { POST, GET, DELETE } from '@/app/api/notifications/settings/route'
-import { POST as SEND_REMINDERS } from '@/app/api/notifications/send-reminders/route'
-import { prisma } from '@/lib/db'
-import { WebhookNotificationService } from '@/lib/notifications/webhook-service'
-import { ReminderService } from '@/lib/notifications/reminder-service'
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test'
 
-// Mock global Request if not available
-if (typeof global.Request === 'undefined') {
-  const { Request } = require('node-fetch')
-  global.Request = Request
-}
-
-// Mock dependencies
-jest.mock('@/lib/auth')
-jest.mock('@/lib/db', () => ({
-  prisma: {
-    notificationSettings: {
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
-    notificationLog: {
-      create: jest.fn(),
-      findFirst: jest.fn(),
-      update: jest.fn(),
-    },
-    scheduledTransaction: {
-      findMany: jest.fn(),
-      update: jest.fn(),
-    }
-  }
-}))
-
-jest.mock('next/headers', () => ({
-  headers: jest.fn(() => Promise.resolve({}))
-}))
+// Create mock functions
+const mockNotificationSettingsFindMany = mock(() => Promise.resolve([]))
+const mockNotificationSettingsFindFirst = mock(() => Promise.resolve(null))
+const mockNotificationSettingsCreate = mock(() => Promise.resolve({}))
+const mockNotificationSettingsUpdate = mock(() => Promise.resolve({}))
+const mockNotificationSettingsDelete = mock(() => Promise.resolve({}))
+const mockNotificationLogCreate = mock(() => Promise.resolve({}))
+const mockNotificationLogFindFirst = mock(() => Promise.resolve(null))
+const mockNotificationLogUpdate = mock(() => Promise.resolve({}))
+const mockScheduledTransactionFindMany = mock(() => Promise.resolve([]))
+const mockScheduledTransactionUpdate = mock(() => Promise.resolve({}))
+const mockGetSession = mock(() => Promise.resolve(null))
+const mockHeaders = mock(() => Promise.resolve({}))
 
 // Mock fetch globally
-global.fetch = jest.fn()
+const mockFetch = mock(() =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+  })
+)
+globalThis.fetch = mockFetch as unknown as typeof fetch
 
-const mockAuth = {
-  api: {
-    getSession: jest.fn()
-  }
-}
+// Mock dependencies before imports
+mock.module('~/lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: mockGetSession,
+    },
+  },
+}))
 
-require('@/lib/auth').auth = mockAuth
+mock.module('~/lib/db', () => ({
+  prisma: {
+    notificationSettings: {
+      findMany: mockNotificationSettingsFindMany,
+      findFirst: mockNotificationSettingsFindFirst,
+      create: mockNotificationSettingsCreate,
+      update: mockNotificationSettingsUpdate,
+      delete: mockNotificationSettingsDelete,
+    },
+    notificationLog: {
+      create: mockNotificationLogCreate,
+      findFirst: mockNotificationLogFindFirst,
+      update: mockNotificationLogUpdate,
+    },
+    scheduledTransaction: {
+      findMany: mockScheduledTransactionFindMany,
+      update: mockScheduledTransactionUpdate,
+    },
+  },
+}))
+
+mock.module('next/headers', () => ({
+  headers: mockHeaders,
+}))
+
+// Import after mocking
+import { POST as SEND_REMINDERS } from '~/pages/_api/notifications/send-reminders'
+import { POST, GET, DELETE } from '~/pages/_api/notifications/settings/index'
+import { prisma } from '~/lib/db'
+import { ReminderService } from '~/lib/notifications/reminder-service'
+import { WebhookNotificationService } from '~/lib/notifications/webhook-service'
+import { NextRequest } from 'next/server'
 
 // Mock data
 const mockUser = {
   id: 'user-1',
-  email: 'test@example.com'
+  email: 'test@example.com',
 }
 
 const mockSession = {
-  user: mockUser
+  user: mockUser,
 }
 
 const mockNotificationSettings = {
@@ -73,18 +86,30 @@ const mockNotificationSettings = {
   budgetAlerts: true,
   isActive: true,
   createdAt: new Date(),
-  updatedAt: new Date()
+  updatedAt: new Date(),
 }
 
 describe('/api/notifications/settings', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockAuth.api.getSession.mockResolvedValue(mockSession)
+    mockNotificationSettingsFindMany.mockReset()
+    mockNotificationSettingsFindFirst.mockReset()
+    mockNotificationSettingsCreate.mockReset()
+    mockNotificationSettingsUpdate.mockReset()
+    mockNotificationSettingsDelete.mockReset()
+    mockNotificationLogCreate.mockReset()
+    mockNotificationLogFindFirst.mockReset()
+    mockNotificationLogUpdate.mockReset()
+    mockScheduledTransactionFindMany.mockReset()
+    mockScheduledTransactionUpdate.mockReset()
+    mockGetSession.mockReset()
+    mockHeaders.mockReset()
+    mockFetch.mockReset()
+    mockGetSession.mockResolvedValue(mockSession)
   })
 
   describe('GET /api/notifications/settings', () => {
     it('should fetch notification settings successfully', async () => {
-      ;(prisma.notificationSettings.findMany as jest.Mock).mockResolvedValue([mockNotificationSettings])
+      mockNotificationSettingsFindMany.mockResolvedValue([mockNotificationSettings])
 
       const request = new NextRequest('http://localhost:3000/api/notifications/settings')
       const response = await GET(request)
@@ -97,7 +122,7 @@ describe('/api/notifications/settings', () => {
     })
 
     it('should require authentication', async () => {
-      mockAuth.api.getSession.mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/notifications/settings')
       const response = await GET(request)
@@ -110,8 +135,8 @@ describe('/api/notifications/settings', () => {
 
   describe('POST /api/notifications/settings', () => {
     it('should create webhook notification settings successfully', async () => {
-      ;(prisma.notificationSettings.findFirst as jest.Mock).mockResolvedValue(null)
-      ;(prisma.notificationSettings.create as jest.Mock).mockResolvedValue(mockNotificationSettings)
+      mockNotificationSettingsFindFirst.mockResolvedValue(null)
+      mockNotificationSettingsCreate.mockResolvedValue(mockNotificationSettings)
 
       const request = new NextRequest('http://localhost:3000/api/notifications/settings', {
         method: 'POST',
@@ -123,8 +148,8 @@ describe('/api/notifications/settings', () => {
           scheduledTransactionReminders: true,
           overdueTransactions: true,
           budgetAlerts: true,
-          isActive: true
-        })
+          isActive: true,
+        }),
       })
 
       const response = await POST(request)
@@ -137,10 +162,10 @@ describe('/api/notifications/settings', () => {
     })
 
     it('should update existing settings', async () => {
-      ;(prisma.notificationSettings.findFirst as jest.Mock).mockResolvedValue(mockNotificationSettings)
-      ;(prisma.notificationSettings.update as jest.Mock).mockResolvedValue({
+      mockNotificationSettingsFindFirst.mockResolvedValue(mockNotificationSettings)
+      mockNotificationSettingsUpdate.mockResolvedValue({
         ...mockNotificationSettings,
-        webhookType: 'DISCORD'
+        webhookType: 'DISCORD',
       })
 
       const request = new NextRequest('http://localhost:3000/api/notifications/settings', {
@@ -153,8 +178,8 @@ describe('/api/notifications/settings', () => {
           scheduledTransactionReminders: true,
           overdueTransactions: true,
           budgetAlerts: true,
-          isActive: true
-        })
+          isActive: true,
+        }),
       })
 
       const response = await POST(request)
@@ -175,8 +200,8 @@ describe('/api/notifications/settings', () => {
           scheduledTransactionReminders: true,
           overdueTransactions: true,
           budgetAlerts: true,
-          isActive: true
-        })
+          isActive: true,
+        }),
       })
 
       const response = await POST(request)
@@ -197,8 +222,8 @@ describe('/api/notifications/settings', () => {
           scheduledTransactionReminders: true,
           overdueTransactions: true,
           budgetAlerts: true,
-          isActive: true
-        })
+          isActive: true,
+        }),
       })
 
       const response = await POST(request)
@@ -219,8 +244,8 @@ describe('/api/notifications/settings', () => {
           scheduledTransactionReminders: true,
           overdueTransactions: true,
           budgetAlerts: true,
-          isActive: true
-        })
+          isActive: true,
+        }),
       })
 
       const response = await POST(request)
@@ -233,12 +258,15 @@ describe('/api/notifications/settings', () => {
 
   describe('DELETE /api/notifications/settings', () => {
     it('should delete notification settings successfully', async () => {
-      ;(prisma.notificationSettings.findFirst as jest.Mock).mockResolvedValue(mockNotificationSettings)
-      ;(prisma.notificationSettings.delete as jest.Mock).mockResolvedValue(mockNotificationSettings)
+      mockNotificationSettingsFindFirst.mockResolvedValue(mockNotificationSettings)
+      mockNotificationSettingsDelete.mockResolvedValue(mockNotificationSettings)
 
-      const request = new NextRequest('http://localhost:3000/api/notifications/settings?id=settings-1', {
-        method: 'DELETE'
-      })
+      const request = new NextRequest(
+        'http://localhost:3000/api/notifications/settings?id=settings-1',
+        {
+          method: 'DELETE',
+        }
+      )
 
       const response = await DELETE(request)
       const data = await response.json()
@@ -247,16 +275,19 @@ describe('/api/notifications/settings', () => {
       expect(data.success).toBe(true)
       expect(data.message).toBe('通知設定が削除されました')
       expect(prisma.notificationSettings.delete).toHaveBeenCalledWith({
-        where: { id: 'settings-1' }
+        where: { id: 'settings-1' },
       })
     })
 
     it('should reject deleting non-owned settings', async () => {
-      ;(prisma.notificationSettings.findFirst as jest.Mock).mockResolvedValue(null)
+      mockNotificationSettingsFindFirst.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost:3000/api/notifications/settings?id=other-settings', {
-        method: 'DELETE'
-      })
+      const request = new NextRequest(
+        'http://localhost:3000/api/notifications/settings?id=other-settings',
+        {
+          method: 'DELETE',
+        }
+      )
 
       const response = await DELETE(request)
       const data = await response.json()
@@ -269,14 +300,14 @@ describe('/api/notifications/settings', () => {
 
 describe('WebhookNotificationService', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockFetch.mockReset()
   })
 
   describe('sendSlackNotification', () => {
     it('should send Slack notification successfully', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
-        status: 200
+        status: 200,
       })
 
       const result = await WebhookNotificationService.sendSlackNotification(
@@ -284,33 +315,33 @@ describe('WebhookNotificationService', () => {
         {
           title: 'テスト通知',
           message: 'これはテストメッセージです',
-          color: '#36a64f'
+          color: '#36a64f',
         }
       )
 
       expect(result.success).toBe(true)
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         'https://hooks.slack.com/services/test/webhook/url',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: expect.stringContaining('テスト通知')
+          body: expect.stringContaining('テスト通知'),
         })
       )
     })
 
     it('should handle Slack API error', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       })
 
       const result = await WebhookNotificationService.sendSlackNotification(
         'https://hooks.slack.com/services/invalid/webhook/url',
         {
           title: 'テスト通知',
-          message: 'これはテストメッセージです'
+          message: 'これはテストメッセージです',
         }
       )
 
@@ -321,9 +352,9 @@ describe('WebhookNotificationService', () => {
 
   describe('sendDiscordNotification', () => {
     it('should send Discord notification successfully', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
-        status: 200
+        status: 200,
       })
 
       const result = await WebhookNotificationService.sendDiscordNotification(
@@ -331,33 +362,33 @@ describe('WebhookNotificationService', () => {
         {
           title: 'テスト通知',
           message: 'これはテストメッセージです',
-          color: '#36a64f'
+          color: '#36a64f',
         }
       )
 
       expect(result.success).toBe(true)
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         'https://discord.com/api/webhooks/test/url',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: expect.stringContaining('テスト通知')
+          body: expect.stringContaining('テスト通知'),
         })
       )
     })
 
     it('should handle Discord API error', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        statusText: 'Bad Request'
+        statusText: 'Bad Request',
       })
 
       const result = await WebhookNotificationService.sendDiscordNotification(
         'https://discord.com/api/webhooks/invalid/url',
         {
           title: 'テスト通知',
-          message: 'これはテストメッセージです'
+          message: 'これはテストメッセージです',
         }
       )
 
@@ -369,21 +400,24 @@ describe('WebhookNotificationService', () => {
 
 describe('/api/notifications/send-reminders', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockAuth.api.getSession.mockResolvedValue(mockSession)
+    mockGetSession.mockReset()
+    mockGetSession.mockResolvedValue(mockSession)
   })
 
   describe('POST /api/notifications/send-reminders', () => {
     it('should process notifications with API key authentication', async () => {
       // Mock ReminderService.processAllNotifications
-      jest.spyOn(ReminderService, 'processAllNotifications').mockResolvedValueOnce({
+      const processAllNotificationsSpy = spyOn(
+        ReminderService,
+        'processAllNotifications'
+      ).mockResolvedValueOnce({
         reminders: { processed: 2, sent: 2 },
-        overdue: { processed: 1 }
+        overdue: { processed: 1 },
       })
 
       const request = new NextRequest('http://localhost:3000/api/notifications/send-reminders', {
         method: 'POST',
-        headers: { 'x-api-key': 'your-notification-api-key-for-cron-jobs' }
+        headers: { 'x-api-key': 'your-notification-api-key-for-cron-jobs' },
       })
 
       // Mock environment variable
@@ -396,16 +430,21 @@ describe('/api/notifications/send-reminders', () => {
       expect(data.success).toBe(true)
       expect(data.message).toBe('通知処理が完了しました')
       expect(ReminderService.processAllNotifications).toHaveBeenCalled()
+
+      processAllNotificationsSpy.mockRestore()
     })
 
     it('should process notifications with session authentication', async () => {
-      jest.spyOn(ReminderService, 'processAllNotifications').mockResolvedValueOnce({
+      const processAllNotificationsSpy = spyOn(
+        ReminderService,
+        'processAllNotifications'
+      ).mockResolvedValueOnce({
         reminders: { processed: 1, sent: 1 },
-        overdue: { processed: 0 }
+        overdue: { processed: 0 },
       })
 
       const request = new NextRequest('http://localhost:3000/api/notifications/send-reminders', {
-        method: 'POST'
+        method: 'POST',
       })
 
       const response = await SEND_REMINDERS(request)
@@ -414,13 +453,15 @@ describe('/api/notifications/send-reminders', () => {
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(ReminderService.processAllNotifications).toHaveBeenCalled()
+
+      processAllNotificationsSpy.mockRestore()
     })
 
     it('should reject unauthorized requests', async () => {
-      mockAuth.api.getSession.mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/notifications/send-reminders', {
-        method: 'POST'
+        method: 'POST',
       })
 
       const response = await SEND_REMINDERS(request)

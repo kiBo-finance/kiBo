@@ -1,0 +1,282 @@
+@import 'tailwindcss';
+
+/* ===========================================
+   kiBo Brand Color Scheme - OKLCH
+   ===========================================
+
+   OKLCH provides perceptually uniform colors,
+   making it easier to create consistent color palettes.
+
+   Primary Colors:
+   - kiBo Violet (#4C1A9D): 知性・堅実な管理・深い空
+   - Hope Amber (#FFB400): 希望・上昇・資産・笑顔
+
+   Neutral Colors:
+   - Pure White (#FFFFFF): 濃い背景上のテキスト
+   - Sumi Black (#212121): 白背景上のテキスト
+   =========================================== */
+
+/* Tailwind CSS v4 Theme Configuration */
+@theme {
+  /* Border Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+
+  /* ===========================================
+     kiBo Brand Colors - Direct Access (OKLCH)
+     Usage: bg-kibo-violet, text-kibo-amber, etc.
+     =========================================== */
+  --color-kibo-violet: oklch(var(--kibo-violet));
+  --color-kibo-violet-light: oklch(var(--kibo-violet-light));
+  --color-kibo-violet-dark: oklch(var(--kibo-violet-dark));
+  --color-kibo-amber: oklch(var(--kibo-amber));
+  --color-kibo-amber-light: oklch(var(--kibo-amber-light));
+  --color-kibo-amber-dark: oklch(var(--kibo-amber-dark));
+  --color-kibo-white: oklch(var(--kibo-white));
+  --color-kibo-black: oklch(var(--kibo-black));
+
+  /* Semantic Colors - Using CSS variables for light/dark mode support */
+  --color-background: oklch(var(--background));
+  --color-foreground: oklch(var(--foreground));
+  --color-card: oklch(var(--card));
+  --color-card-foreground: oklch(var(--card-foreground));
+  --color-popover: oklch(var(--popover));
+  --color-popover-foreground: oklch(var(--popover-foreground));
+  --color-primary: oklch(var(--primary));
+  --color-primary-foreground: oklch(var(--primary-foreground));
+  --color-secondary: oklch(var(--secondary));
+  --color-secondary-foreground: oklch(var(--secondary-foreground));
+  --color-muted: oklch(var(--muted));
+  --color-muted-foreground: oklch(var(--muted-foreground));
+  --color-accent: oklch(var(--accent));
+  --color-accent-foreground: oklch(var(--accent-foreground));
+  --color-destructive: oklch(var(--destructive));
+  --color-destructive-foreground: oklch(var(--destructive-foreground));
+  --color-border: oklch(var(--border));
+  --color-input: oklch(var(--input));
+  --color-ring: oklch(var(--ring));
+
+  /* Success/Warning/Info - Semantic */
+  --color-success: oklch(var(--success));
+  --color-success-foreground: oklch(var(--success-foreground));
+  --color-warning: oklch(var(--warning));
+  --color-warning-foreground: oklch(var(--warning-foreground));
+  --color-info: oklch(var(--info));
+  --color-info-foreground: oklch(var(--info-foreground));
+
+  /* Chart Colors */
+  --color-chart-1: oklch(var(--chart-1));
+  --color-chart-2: oklch(var(--chart-2));
+  --color-chart-3: oklch(var(--chart-3));
+  --color-chart-4: oklch(var(--chart-4));
+  --color-chart-5: oklch(var(--chart-5));
+
+  /* Animations for React Aria components */
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-fade-out: fade-out 0.15s ease-in;
+  --animate-slide-in-from-top: slide-in-from-top 0.2s ease-out;
+  --animate-slide-in-from-bottom: slide-in-from-bottom 0.2s ease-out;
+  --animate-slide-out-to-top: slide-out-to-top 0.15s ease-in;
+  --animate-slide-out-to-bottom: slide-out-to-bottom 0.15s ease-in;
+  --animate-zoom-in: zoom-in 0.2s ease-out;
+  --animate-zoom-out: zoom-out 0.15s ease-in;
+}
+
+/* Animation Keyframes */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slide-in-from-top {
+  from { transform: translateY(-0.5rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-in-from-bottom {
+  from { transform: translateY(0.5rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-out-to-top {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-0.5rem); opacity: 0; }
+}
+
+@keyframes slide-out-to-bottom {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(0.5rem); opacity: 0; }
+}
+
+@keyframes zoom-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes zoom-out {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+}
+
+/* ===========================================
+   Light Mode Variables - OKLCH
+
+   OKLCH format: L C H
+   - L: Lightness (0-1 or 0%-100%)
+   - C: Chroma (0-0.4, color intensity)
+   - H: Hue (0-360 degrees)
+   =========================================== */
+:root {
+  /* kiBo Brand Colors - OKLCH */
+  --kibo-violet: 35.1% 0.219 290.5;       /* #4C1A9D - メインカラー */
+  --kibo-violet-light: 50% 0.18 290;      /* より明るいバイオレット */
+  --kibo-violet-dark: 25% 0.24 290;       /* より暗いバイオレット */
+  --kibo-amber: 81.8% 0.177 84.5;         /* #FFB400 - アクセントカラー */
+  --kibo-amber-light: 88% 0.14 85;        /* より明るいアンバー */
+  --kibo-amber-dark: 72% 0.19 85;         /* より暗いアンバー */
+  --kibo-white: 100% 0 0;                 /* #FFFFFF */
+  --kibo-black: 20% 0 0;                  /* #212121 - スミ色 */
+
+  /* Semantic Colors - Using kiBo Brand */
+  --background: 100% 0 0;                 /* White */
+  --foreground: 20% 0 0;                  /* スミ色 (#212121) */
+  --card: 100% 0 0;
+  --card-foreground: 20% 0 0;
+  --popover: 100% 0 0;
+  --popover-foreground: 20% 0 0;
+  --primary: 35.1% 0.219 290.5;           /* kiBo Violet */
+  --primary-foreground: 100% 0 0;         /* Pure White */
+  --secondary: 96% 0.02 290;              /* 薄いバイオレット系 */
+  --secondary-foreground: 35.1% 0.219 290.5;
+  --muted: 96% 0.01 290;
+  --muted-foreground: 55% 0 0;
+  --accent: 81.8% 0.177 84.5;             /* Hope Amber */
+  --accent-foreground: 20% 0 0;           /* スミ色 */
+  --destructive: 55% 0.22 25;             /* Red */
+  --destructive-foreground: 98% 0 0;
+  --border: 92% 0.015 290;
+  --input: 92% 0.015 290;
+  --ring: 35.1% 0.219 290.5;              /* kiBo Violet */
+  --radius: 0.5rem;
+
+  /* Chart Colors - kiBo themed */
+  --chart-1: 35.1% 0.219 290.5;           /* kiBo Violet */
+  --chart-2: 81.8% 0.177 84.5;            /* Hope Amber */
+  --chart-3: 55% 0.15 290;                /* Lighter Violet */
+  --chart-4: 85% 0.12 85;                 /* Lighter Amber */
+  --chart-5: 60% 0.15 230;                /* Complementary Blue */
+
+  /* Success/Warning/Info colors */
+  --success: 50% 0.17 145;                /* Green */
+  --success-foreground: 100% 0 0;
+  --warning: 81.8% 0.177 84.5;            /* Same as Amber */
+  --warning-foreground: 20% 0 0;
+  --info: 60% 0.15 230;                   /* Blue */
+  --info-foreground: 100% 0 0;
+}
+
+/* ===========================================
+   Dark Mode Variables - kiBo Brand (OKLCH)
+   =========================================== */
+.dark {
+  /* kiBo Brand Colors (same values for consistency) */
+  --kibo-violet: 35.1% 0.219 290.5;
+  --kibo-violet-light: 55% 0.18 290;
+  --kibo-violet-dark: 25% 0.24 290;
+  --kibo-amber: 81.8% 0.177 84.5;
+  --kibo-amber-light: 88% 0.14 85;
+  --kibo-amber-dark: 72% 0.19 85;
+  --kibo-white: 100% 0 0;
+  --kibo-black: 20% 0 0;
+
+  /* Semantic Colors - Dark Mode */
+  --background: 15% 0.05 290;             /* 深いバイオレット系の背景 */
+  --foreground: 98% 0 0;                  /* Pure White に近い */
+  --card: 18% 0.04 290;                   /* カード背景 */
+  --card-foreground: 98% 0 0;
+  --popover: 18% 0.04 290;
+  --popover-foreground: 98% 0 0;
+  --primary: 55% 0.18 290;                /* より明るいバイオレット */
+  --primary-foreground: 100% 0 0;
+  --secondary: 22% 0.04 290;
+  --secondary-foreground: 98% 0 0;
+  --muted: 22% 0.03 290;
+  --muted-foreground: 65% 0 0;
+  --accent: 81.8% 0.177 84.5;             /* Hope Amber (同じ) */
+  --accent-foreground: 20% 0 0;
+  --destructive: 45% 0.2 25;
+  --destructive-foreground: 98% 0 0;
+  --border: 25% 0.03 290;
+  --input: 25% 0.03 290;
+  --ring: 55% 0.18 290;
+
+  /* Chart Colors - Dark Mode */
+  --chart-1: 55% 0.18 290;
+  --chart-2: 85% 0.16 85;
+  --chart-3: 65% 0.14 290;
+  --chart-4: 80% 0.12 85;
+  --chart-5: 65% 0.14 230;
+
+  /* Success/Warning/Info colors - Dark Mode */
+  --success: 55% 0.15 145;
+  --success-foreground: 100% 0 0;
+  --warning: 85% 0.16 85;
+  --warning-foreground: 20% 0 0;
+  --info: 65% 0.14 230;
+  --info-foreground: 100% 0 0;
+}
+
+/* Base Styles */
+* {
+  border-color: oklch(var(--border));
+}
+
+body {
+  background-color: oklch(var(--background));
+  color: oklch(var(--foreground));
+}
+
+/* React Aria Animation Classes */
+[data-entering] {
+  animation: fade-in 0.2s ease-out, zoom-in 0.2s ease-out;
+}
+
+[data-exiting] {
+  animation: fade-out 0.15s ease-in, zoom-out 0.15s ease-in;
+}
+
+/* Modal/Dialog specific animations */
+[data-entering][data-placement="top"] {
+  animation: fade-in 0.2s ease-out, slide-in-from-top 0.2s ease-out;
+}
+
+[data-entering][data-placement="bottom"] {
+  animation: fade-in 0.2s ease-out, slide-in-from-bottom 0.2s ease-out;
+}
+
+[data-exiting][data-placement="top"] {
+  animation: fade-out 0.15s ease-in, slide-out-to-top 0.15s ease-in;
+}
+
+[data-exiting][data-placement="bottom"] {
+  animation: fade-out 0.15s ease-in, slide-out-to-bottom 0.15s ease-in;
+}
+
+/* ===========================================
+   Color Reference (HEX equivalents)
+   ===========================================
+   kiBo Violet:      #4C1A9D
+   kiBo Violet Light: ~#7B3FC9
+   kiBo Violet Dark:  ~#2E0F5E
+   Hope Amber:        #FFB400
+   Hope Amber Light:  ~#FFCC4D
+   Hope Amber Dark:   ~#CC9000
+   Pure White:        #FFFFFF
+   Sumi Black:        #212121
+   =========================================== */

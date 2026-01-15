@@ -1,20 +1,25 @@
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { ThemeProvider } from '~/components/providers/ThemeProvider'
+import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select'
+import { cleanup, render, screen } from '@testing-library/react'
+import { Link } from 'waku/router/client'
 import React from 'react'
-import { render, screen } from '@testing-library/react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ThemeProvider } from '@/components/providers/ThemeProvider'
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider>
-      {component}
-    </ThemeProvider>
-  )
+  return render(<ThemeProvider>{component}</ThemeProvider>)
 }
 
 describe('Cursor Pointer Styles', () => {
   beforeEach(() => {
+    cleanup() // Clean up DOM between tests
     localStorage.clear()
     document.documentElement.className = ''
   })
@@ -26,10 +31,8 @@ describe('Cursor Pointer Styles', () => {
 
   describe('Button Component', () => {
     it('should have cursor-pointer class', () => {
-      renderWithProviders(
-        <Button data-testid="button">Test Button</Button>
-      )
-      
+      renderWithProviders(<Button data-testid="button">Test Button</Button>)
+
       const button = screen.getByTestId('button')
       expect(button).toHaveClass('cursor-pointer')
     })
@@ -40,21 +43,21 @@ describe('Cursor Pointer Styles', () => {
           Disabled Button
         </Button>
       )
-      
+
       const button = screen.getByTestId('disabled-button')
       expect(button).toHaveClass('disabled:cursor-not-allowed')
     })
 
     it('should maintain cursor-pointer in different variants', () => {
       const variants = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'] as const
-      
-      variants.forEach(variant => {
+
+      variants.forEach((variant) => {
         renderWithProviders(
           <Button variant={variant} data-testid={`button-${variant}`}>
             {variant} Button
           </Button>
         )
-        
+
         const button = screen.getByTestId(`button-${variant}`)
         expect(button).toHaveClass('cursor-pointer')
       })
@@ -62,14 +65,14 @@ describe('Cursor Pointer Styles', () => {
 
     it('should maintain cursor styles in different sizes', () => {
       const sizes = ['default', 'sm', 'lg', 'icon'] as const
-      
-      sizes.forEach(size => {
+
+      sizes.forEach((size) => {
         renderWithProviders(
           <Button size={size} data-testid={`button-${size}`}>
             {size === 'icon' ? '🎉' : `${size} Button`}
           </Button>
         )
-        
+
         const button = screen.getByTestId(`button-${size}`)
         expect(button).toHaveClass('cursor-pointer')
       })
@@ -88,7 +91,7 @@ describe('Cursor Pointer Styles', () => {
           </SelectContent>
         </Select>
       )
-      
+
       const selectTrigger = screen.getByTestId('select-trigger')
       expect(selectTrigger).toHaveClass('cursor-pointer')
     })
@@ -104,7 +107,7 @@ describe('Cursor Pointer Styles', () => {
           </SelectContent>
         </Select>
       )
-      
+
       const selectTrigger = screen.getByTestId('disabled-select')
       expect(selectTrigger).toHaveClass('disabled:cursor-not-allowed')
     })
@@ -113,11 +116,11 @@ describe('Cursor Pointer Styles', () => {
   describe('Interactive Elements', () => {
     it('should apply cursor-pointer to clickable links', () => {
       renderWithProviders(
-        <a href="/test" className="text-primary hover:underline cursor-pointer" data-testid="link">
+        <Link href="/test" className="cursor-pointer text-primary hover:underline" data-testid="link">
           Test Link
-        </a>
+        </Link>
       )
-      
+
       const link = screen.getByTestId('link')
       expect(link).toHaveClass('cursor-pointer')
     })
@@ -125,30 +128,18 @@ describe('Cursor Pointer Styles', () => {
     it('should apply appropriate cursor styles to form elements', () => {
       renderWithProviders(
         <div>
-          <Input 
-            type="text" 
-            placeholder="Text input"
-            data-testid="text-input"
-          />
-          <Input 
-            type="checkbox" 
-            className="cursor-pointer"
-            data-testid="checkbox-input"
-          />
-          <Input 
-            type="radio" 
-            className="cursor-pointer"
-            data-testid="radio-input"
-          />
+          <Input type="text" placeholder="Text input" data-testid="text-input" />
+          <Input type="checkbox" className="cursor-pointer" data-testid="checkbox-input" />
+          <Input type="radio" className="cursor-pointer" data-testid="radio-input" />
         </div>
       )
-      
+
       const textInput = screen.getByTestId('text-input')
       expect(textInput).toHaveClass('cursor-text')
-      
+
       const checkboxInput = screen.getByTestId('checkbox-input')
       expect(checkboxInput).toHaveClass('cursor-pointer')
-      
+
       const radioInput = screen.getByTestId('radio-input')
       expect(radioInput).toHaveClass('cursor-pointer')
     })
@@ -157,7 +148,7 @@ describe('Cursor Pointer Styles', () => {
   describe('Dark Mode Cursor Styles', () => {
     it('should maintain cursor styles in dark mode', () => {
       document.documentElement.classList.add('dark')
-      
+
       renderWithProviders(
         <div>
           <Button data-testid="dark-button">Dark Button</Button>
@@ -171,17 +162,17 @@ describe('Cursor Pointer Styles', () => {
           </Select>
         </div>
       )
-      
+
       const button = screen.getByTestId('dark-button')
       expect(button).toHaveClass('cursor-pointer')
-      
+
       const selectTrigger = screen.getByTestId('dark-select')
       expect(selectTrigger).toHaveClass('cursor-pointer')
     })
 
     it('should maintain disabled cursor styles in dark mode', () => {
       document.documentElement.classList.add('dark')
-      
+
       renderWithProviders(
         <div>
           <Button disabled data-testid="dark-disabled-button">
@@ -197,10 +188,10 @@ describe('Cursor Pointer Styles', () => {
           </Select>
         </div>
       )
-      
+
       const button = screen.getByTestId('dark-disabled-button')
       expect(button).toHaveClass('disabled:cursor-not-allowed')
-      
+
       const selectTrigger = screen.getByTestId('dark-disabled-select')
       expect(selectTrigger).toHaveClass('disabled:cursor-not-allowed')
     })
@@ -213,7 +204,7 @@ describe('Cursor Pointer Styles', () => {
           Hover Button
         </Button>
       )
-      
+
       const button = screen.getByTestId('hover-button')
       expect(button).toHaveClass('cursor-pointer')
       expect(button).toHaveClass('hover:bg-gray-100')
@@ -225,7 +216,7 @@ describe('Cursor Pointer Styles', () => {
           Focus Button
         </Button>
       )
-      
+
       const button = screen.getByTestId('focus-button')
       expect(button).toHaveClass('cursor-pointer')
       expect(button).toHaveClass('focus:ring-2')
@@ -236,17 +227,11 @@ describe('Cursor Pointer Styles', () => {
     it('should maintain cursor styles with proper ARIA attributes', () => {
       renderWithProviders(
         <div>
-          <Button 
-            aria-label="Accessible button"
-            data-testid="aria-button"
-          >
+          <Button aria-label="Accessible button" data-testid="aria-button">
             Accessible Button
           </Button>
           <Select>
-            <SelectTrigger 
-              aria-label="Accessible select"
-              data-testid="aria-select"
-            >
+            <SelectTrigger aria-label="Accessible select" data-testid="aria-select">
               <SelectValue placeholder="Accessible select" />
             </SelectTrigger>
             <SelectContent>
@@ -255,11 +240,11 @@ describe('Cursor Pointer Styles', () => {
           </Select>
         </div>
       )
-      
+
       const button = screen.getByTestId('aria-button')
       expect(button).toHaveClass('cursor-pointer')
       expect(button).toHaveAttribute('aria-label', 'Accessible button')
-      
+
       const selectTrigger = screen.getByTestId('aria-select')
       expect(selectTrigger).toHaveClass('cursor-pointer')
       expect(selectTrigger).toHaveAttribute('aria-label', 'Accessible select')

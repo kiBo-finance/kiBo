@@ -3,18 +3,22 @@
 ## DevContainer開始手順
 
 ### 1. 前提条件
+
 - VSCode + Remote-Containers拡張機能
 - Docker Desktop稼働中
 - kiBoアプリリポジトリをクローン
 
 ### 2. DevContainer起動
+
 1. VSCodeでプロジェクトフォルダを開く
 2. コマンドパレット (`Ctrl+Shift+P`) を開く
 3. "Dev Containers: Reopen in Container" を選択
 4. 初回は数分かかります（Docker image build）
 
 ### 3. 環境確認
+
 DevContainer起動後、ターミナルで以下を実行:
+
 ```bash
 # Welcome script（環境確認）
 welcome.sh
@@ -28,20 +32,24 @@ npm test             # テスト実行
 ## 利用可能なサービス
 
 ### アプリケーション
+
 - **開発サーバー**: http://localhost:3001
-- **API**: http://localhost:3001/api/*
+- **API**: http://localhost:3001/api/\*
 
 ### データベース
+
 - **PostgreSQL**: localhost:5432
 - **Prisma Studio**: http://localhost:5555
 - **Redis**: localhost:6379
 
 ### 管理ツール
+
 - **Health Check**: http://localhost:3001/api/health
 
 ## VSCode統合機能
 
 ### 拡張機能（自動インストール）
+
 - TypeScript Next.js support
 - Tailwind CSS IntelliSense
 - Prisma ORM support
@@ -50,11 +58,13 @@ npm test             # テスト実行
 - Docker support
 
 ### デバッグ設定
+
 - **F5**: Next.js フルスタックデバッグ
 - **Jest**: テストデバッグ対応
 - **Chrome DevTools**: クライアントサイドデバッグ
 
 ### タスク実行 (`Ctrl+Shift+P` → "Tasks: Run Task")
+
 - `dev: Start Development Server`
 - `test: Run All Tests`
 - `lint: Check Code Quality`
@@ -64,6 +74,7 @@ npm test             # テスト実行
 ## 開発ワークフロー
 
 ### 1. 日常開発
+
 ```bash
 # 開発サーバー起動
 npm run dev
@@ -76,6 +87,7 @@ npm run db:studio
 ```
 
 ### 2. コード品質チェック
+
 ```bash
 # Linting + Formatting
 npm run lint:fix
@@ -88,6 +100,7 @@ npm test
 ```
 
 ### 3. データベース操作
+
 ```bash
 # スキーマ更新
 npm run db:push
@@ -102,11 +115,13 @@ npm run db:seed
 ## ファイル監視・同期
 
 ### Volume Mount設定
-- **Source**: ローカル `D:\kiBo` 
+
+- **Source**: ローカル `D:\kiBo`
 - **Target**: コンテナ `/app`
 - **Type**: cached (高パフォーマンス)
 
 ### 除外ディレクトリ
+
 - `node_modules/` - コンテナ内で管理
 - `.next/` - ビルド成果物
 - `dist/` - 配布用ビルド
@@ -114,6 +129,7 @@ npm run db:seed
 ## 環境変数
 
 DevContainer内で自動設定される環境変数:
+
 ```bash
 NODE_ENV=development
 DATABASE_URL=postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
@@ -126,6 +142,7 @@ REDIS_URL=redis://redis:6379
 ## トラブルシューティング
 
 ### コンテナ起動失敗
+
 ```bash
 # Docker情報確認
 docker --version
@@ -136,6 +153,7 @@ docker-compose --version
 ```
 
 ### ポート競合
+
 ```bash
 # 使用中ポート確認
 netstat -ano | findstr :3001
@@ -145,6 +163,7 @@ npx kill-port 3001
 ```
 
 ### 権限問題
+
 ```bash
 # ファイル権限確認
 ls -la /app
@@ -154,6 +173,7 @@ whoami  # nodeユーザーであることを確認
 ```
 
 ### データベース接続問題
+
 ```bash
 # PostgreSQL接続テスト
 psql postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
@@ -165,12 +185,14 @@ npx prisma db pull
 ## 開発効率化
 
 ### VSCode設定済み機能
+
 - **自動フォーマット**: 保存時にBiome適用
 - **自動インポート**: TypeScript自動インポート
 - **Tailwind IntelliSense**: クラス名補完
 - **Jest統合**: テスト実行・デバッグ
 
 ### ショートカット
+
 - **Ctrl+Shift+P**: コマンドパレット
 - **F5**: デバッグ実行
 - **Ctrl+`**: ターミナル表示

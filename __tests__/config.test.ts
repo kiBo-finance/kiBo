@@ -1,6 +1,7 @@
 /**
  * Configuration tests for Phase 1 infrastructure
  */
+import { describe, it, expect } from 'bun:test'
 
 describe('Project Configuration', () => {
   describe('Environment Variables', () => {
@@ -45,9 +46,11 @@ describe('Project Configuration', () => {
     })
 
     it('should have testing dependencies', () => {
-      expect(packageJson.devDependencies['jest']).toBeDefined()
+      // Using Bun's built-in test runner, so no jest dependency needed
+      expect(packageJson.devDependencies['@types/bun']).toBeDefined()
       expect(packageJson.devDependencies['@testing-library/react']).toBeDefined()
       expect(packageJson.devDependencies['@testing-library/jest-dom']).toBeDefined()
+      expect(packageJson.devDependencies['happy-dom']).toBeDefined()
     })
 
     it('should have required scripts', () => {

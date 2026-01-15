@@ -150,7 +150,7 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
@@ -182,12 +182,12 @@ services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_DB: kibo_dev
       POSTGRES_USER: kibo_user
       POSTGRES_PASSWORD: kibo_password
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --locale=C'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -195,7 +195,7 @@ services:
       - kibo-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kibo_user -d kibo_dev"]
+      test: ['CMD-SHELL', 'pg_isready -U kibo_user -d kibo_dev']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -204,7 +204,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
       - ./docker/redis/redis.conf:/etc/redis/redis.conf
@@ -213,7 +213,7 @@ services:
       - kibo-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 3
@@ -225,7 +225,7 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "5555:5555"
+      - '5555:5555'
     environment:
       - DATABASE_URL=postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
     volumes:
@@ -243,8 +243,8 @@ services:
   mailhog:
     image: mailhog/mailhog:latest
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
     networks:
       - kibo-network
     profiles:
@@ -274,8 +274,8 @@ services:
       context: ./docker/nginx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/nginx/ssl:/etc/nginx/ssl:ro
@@ -286,10 +286,10 @@ services:
       - kibo-network
     restart: unless-stopped
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
   # Next.js アプリケーション（プロダクション）
   app:
@@ -324,12 +324,12 @@ services:
           memory: 512M
           cpus: '0.25'
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -342,7 +342,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --locale=C'
     volumes:
       - postgres_prod_data:/var/lib/postgresql/data
       - ./backups:/backups
@@ -355,12 +355,12 @@ services:
           memory: 2G
           cpus: '1.0'
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "50m"
-        max-file: "5"
+        max-size: '50m'
+        max-file: '5'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -381,12 +381,12 @@ services:
           memory: 512M
           cpus: '0.25'
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -464,14 +464,14 @@ events {
 http {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-    
+
     # ログフォーマット
     log_format main '$remote_addr - $remote_user [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
                     '"$http_user_agent" "$http_x_forwarded_for"';
-    
+
     access_log /var/log/nginx/access.log main;
-    
+
     # パフォーマンス設定
     sendfile on;
     tcp_nopush on;
@@ -479,7 +479,7 @@ http {
     keepalive_timeout 65;
     types_hash_max_size 2048;
     client_max_body_size 10M;
-    
+
     # Gzip圧縮
     gzip on;
     gzip_vary on;
@@ -495,39 +495,39 @@ http {
         application/xml+rss
         application/atom+xml
         image/svg+xml;
-    
+
     # セキュリティヘッダー
     add_header X-Frame-Options DENY;
     add_header X-Content-Type-Options nosniff;
     add_header X-XSS-Protection "1; mode=block";
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    
+
     # Rate Limiting
     limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
     limit_req_zone $binary_remote_addr zone=login:10m rate=1r/s;
-    
+
     upstream app {
         server app:3000 max_fails=3 fail_timeout=30s;
         keepalive 32;
     }
-    
+
     server {
         listen 80;
         server_name localhost;
         return 301 https://$server_name$request_uri;
     }
-    
+
     server {
         listen 443 ssl http2;
         server_name localhost;
-        
+
         # SSL設定
         ssl_certificate /etc/nginx/ssl/nginx.crt;
         ssl_certificate_key /etc/nginx/ssl/nginx.key;
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384;
         ssl_prefer_server_ciphers off;
-        
+
         # Next.js アプリケーション
         location / {
             proxy_pass http://app;
@@ -543,7 +543,7 @@ http {
             proxy_send_timeout 30s;
             proxy_read_timeout 30s;
         }
-        
+
         # API Rate Limiting
         location /api/ {
             limit_req zone=api burst=20 nodelay;
@@ -553,7 +553,7 @@ http {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }
-        
+
         # 認証API専用レート制限
         location /api/auth/ {
             limit_req zone=login burst=5 nodelay;
@@ -563,13 +563,13 @@ http {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }
-        
+
         # 静的ファイル
         location /_next/static {
             proxy_cache_valid 200 1d;
             proxy_pass http://app;
         }
-        
+
         # ヘルスチェック
         location /health {
             access_log off;
@@ -760,7 +760,7 @@ export async function GET() {
   try {
     // データベース接続確認
     await prisma.$queryRaw`SELECT 1`
-    
+
     const healthCheck = {
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -769,7 +769,7 @@ export async function GET() {
       environment: process.env.NODE_ENV,
       database: 'connected',
     }
-    
+
     return NextResponse.json(healthCheck, { status: 200 })
   } catch (error) {
     const healthCheck = {
@@ -779,7 +779,7 @@ export async function GET() {
       error: error instanceof Error ? error.message : 'Unknown error',
       database: 'disconnected',
     }
-    
+
     return NextResponse.json(healthCheck, { status: 503 })
   }
 }
@@ -788,6 +788,7 @@ export async function GET() {
 ## 使用方法
 
 ### 開発環境起動
+
 ```bash
 # 基本開発環境
 chmod +x scripts/docker-dev.sh
@@ -798,6 +799,7 @@ docker-compose --env-file .env.docker.dev --profile tools up
 ```
 
 ### プロダクション環境起動
+
 ```bash
 # プロダクション環境
 chmod +x scripts/docker-prod.sh
@@ -808,6 +810,7 @@ docker-compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile 
 ```
 
 ### 運用コマンド
+
 ```bash
 # ログ確認
 docker-compose logs -f app

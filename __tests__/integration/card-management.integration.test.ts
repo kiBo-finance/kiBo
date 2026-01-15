@@ -1,16 +1,41 @@
-import { jest, describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals'
-import { NextRequest } from 'next/server'
-import { GET as getCards, POST as createCard } from '@/app/api/cards/route'
-import { GET as getCard, PATCH as updateCard, DELETE as deleteCard } from '@/app/api/cards/[id]/route'
-import { POST as makePayment } from '@/app/api/cards/[id]/payment/route'
-import { POST as chargeCard } from '@/app/api/cards/[id]/charge/route'
-import { prisma } from '@/lib/db'
-import { auth } from '@/lib/auth'
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  mock,
+} from 'bun:test'
 
-jest.mock('@/lib/auth')
-const mockAuth = auth as jest.Mocked<typeof auth>;
+// Define mock functions at the top level
+const mockGetSession = mock(() => Promise.resolve(null))
 
-describe('Card Management Integration Tests', () => {
+// Mock auth module before importing
+mock.module('~/lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: mockGetSession,
+    },
+  },
+}))
+
+import { POST as chargeCard } from '~/pages/_api/cards/[id]/charge'
+import { POST as makePayment } from '~/pages/_api/cards/[id]/payment'
+import {
+  GET as getCard,
+  PATCH as updateCard,
+  DELETE as deleteCard,
+} from '~/pages/_api/cards/[id]'
+import { GET as getCards, POST as createCard } from '~/pages/_api/cards/index'
+import { prisma } from '~/lib/db'
+
+// Skip these tests if database is not available
+const describeIfDb =
+  process.env.DATABASE_URL && process.env.RUN_DB_TESTS ? describe : describe.skip
+
+describeIfDb('Card Management Integration Tests', () => {
   let testUser: any
   let testAccount: any
   let testCard: any
@@ -18,21 +43,19 @@ describe('Card Management Integration Tests', () => {
   const mockSession = {
     user: { id: 'test-user-id', email: 'test@example.com', name: 'Test User' },
     token: 'test-token',
-    expiresAt: new Date(Date.now() + 86400000)
+    expiresAt: new Date(Date.now() + 86400000),
   }
 
   beforeAll(async () => {
-    mockAuth.api = {
-      getSession: jest.fn().mockResolvedValue(mockSession)
-    } as any
+    mockGetSession.mockImplementation(() => Promise.resolve(mockSession))
 
     testUser = await prisma.user.create({
       data: {
         id: 'test-user-id',
         email: 'test@example.com',
         name: 'Test User',
-        emailVerified: false
-      }
+        emailVerified: false,
+      },
     })
 
     testAccount = await prisma.appAccount.create({
@@ -41,8 +64,8 @@ describe('Card Management Integration Tests', () => {
         name: 'Test Account',
         type: 'CHECKING',
         currency: 'JPY',
-        balance: '1000000'
-      }
+        balance: '1000000',
+      },
     })
   })
 
@@ -68,13 +91,13 @@ describe('Card Management Integration Tests', () => {
         accountId: testAccount.id,
         creditLimit: 500000,
         billingDate: 15,
-        paymentDate: 10
+        paymentDate: 10,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
@@ -87,7 +110,7 @@ describe('Card Management Integration Tests', () => {
 
       const cardId = createData.data.id
 
-      const getRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`)
+      const getRequest = new Request(`http://localhost:3000/api/cards/${cardId}`)
       const getResponse = await getCard(getRequest, { params: Promise.resolve({ id: cardId }) })
       const getData = await getResponse.json()
 
@@ -98,28 +121,32 @@ describe('Card Management Integration Tests', () => {
         amount: 15000,
         currency: 'JPY',
         description: 'Test purchase',
-        categoryId: null
+        categoryId: null,
       }
 
-      const paymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}/payment`, {
+      const paymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}/payment`, {
         method: 'POST',
         body: JSON.stringify(paymentData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
-      const paymentResponse = await makePayment(paymentRequest, { params: Promise.resolve({ id: cardId }) })
+      const paymentResponse = await makePayment(paymentRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const paymentResponseData = await paymentResponse.json()
 
       expect(paymentResponse.status).toBe(200)
       expect(paymentResponseData.success).toBe(true)
 
-      const getAfterPaymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`)
-      const getAfterPaymentResponse = await getCard(getAfterPaymentRequest, { params: Promise.resolve({ id: cardId }) })
+      const getAfterPaymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}`)
+      const getAfterPaymentResponse = await getCard(getAfterPaymentRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const getAfterPaymentData = await getAfterPaymentResponse.json()
 
       expect(getAfterPaymentData.data.monthlyUsage).toBe('15000')
 
-      const listRequest = new NextRequest('http://localhost:3000/api/cards')
+      const listRequest = new Request('http://localhost:3000/api/cards')
       const listResponse = await getCards(listRequest)
       const listData = await listResponse.json()
 
@@ -136,13 +163,13 @@ describe('Card Management Integration Tests', () => {
         accountId: testAccount.id,
         creditLimit: 10000,
         billingDate: 15,
-        paymentDate: 10
+        paymentDate: 10,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
@@ -153,16 +180,18 @@ describe('Card Management Integration Tests', () => {
         amount: 15000,
         currency: 'JPY',
         description: 'Exceeding limit',
-        categoryId: null
+        categoryId: null,
       }
 
-      const paymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}/payment`, {
+      const paymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}/payment`, {
         method: 'POST',
         body: JSON.stringify(paymentData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
-      const paymentResponse = await makePayment(paymentRequest, { params: Promise.resolve({ id: cardId }) })
+      const paymentResponse = await makePayment(paymentRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const paymentResponseData = await paymentResponse.json()
 
       expect(paymentResponse.status).toBe(400)
@@ -180,8 +209,8 @@ describe('Card Management Integration Tests', () => {
           name: 'Linked Savings Account',
           type: 'SAVINGS',
           currency: 'JPY',
-          balance: '500000'
-        }
+          balance: '500000',
+        },
       })
     })
 
@@ -199,13 +228,13 @@ describe('Card Management Integration Tests', () => {
         accountId: testAccount.id,
         linkedAccountId: linkedAccount.id,
         autoTransferEnabled: true,
-        minBalance: 10000
+        minBalance: 10000,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
@@ -218,35 +247,37 @@ describe('Card Management Integration Tests', () => {
 
       await prisma.appAccount.update({
         where: { id: testAccount.id },
-        data: { balance: '5000' }
+        data: { balance: '5000' },
       })
 
       const paymentData = {
         amount: 10000,
         currency: 'JPY',
-        description: 'Payment requiring auto transfer'
+        description: 'Payment requiring auto transfer',
       }
 
-      const paymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}/payment`, {
+      const paymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}/payment`, {
         method: 'POST',
         body: JSON.stringify(paymentData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
-      const paymentResponse = await makePayment(paymentRequest, { params: Promise.resolve({ id: cardId }) })
+      const paymentResponse = await makePayment(paymentRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const paymentResponseData = await paymentResponse.json()
 
       expect(paymentResponse.status).toBe(200)
       expect(paymentResponseData.success).toBe(true)
 
       const autoTransfers = await prisma.autoTransfer.findMany({
-        where: { cardId }
+        where: { cardId },
       })
       expect(autoTransfers).toHaveLength(1)
       expect(autoTransfers[0].amount).toBe('15000')
 
       const updatedLinkedAccount = await prisma.appAccount.findUnique({
-        where: { id: linkedAccount.id }
+        where: { id: linkedAccount.id },
       })
       expect(parseFloat(updatedLinkedAccount!.balance)).toBeLessThan(500000)
     })
@@ -259,13 +290,13 @@ describe('Card Management Integration Tests', () => {
         type: 'PREPAID',
         lastFourDigits: '3456',
         accountId: testAccount.id,
-        balance: 10000
+        balance: 10000,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
@@ -278,23 +309,27 @@ describe('Card Management Integration Tests', () => {
 
       const chargeData = {
         amount: 5000,
-        fromAccountId: testAccount.id
+        fromAccountId: testAccount.id,
       }
 
-      const chargeRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}/charge`, {
+      const chargeRequest = new Request(`http://localhost:3000/api/cards/${cardId}/charge`, {
         method: 'POST',
         body: JSON.stringify(chargeData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
-      const chargeResponse = await chargeCard(chargeRequest, { params: Promise.resolve({ id: cardId }) })
+      const chargeResponse = await chargeCard(chargeRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const chargeResponseData = await chargeResponse.json()
 
       expect(chargeResponse.status).toBe(200)
       expect(chargeResponseData.success).toBe(true)
 
-      const getAfterChargeRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`)
-      const getAfterChargeResponse = await getCard(getAfterChargeRequest, { params: Promise.resolve({ id: cardId }) })
+      const getAfterChargeRequest = new Request(`http://localhost:3000/api/cards/${cardId}`)
+      const getAfterChargeResponse = await getCard(getAfterChargeRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const getAfterChargeData = await getAfterChargeResponse.json()
 
       expect(getAfterChargeData.data.balance).toBe('15000')
@@ -302,23 +337,27 @@ describe('Card Management Integration Tests', () => {
       const paymentData = {
         amount: 8000,
         currency: 'JPY',
-        description: 'Prepaid card payment'
+        description: 'Prepaid card payment',
       }
 
-      const paymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}/payment`, {
+      const paymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}/payment`, {
         method: 'POST',
         body: JSON.stringify(paymentData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
-      const paymentResponse = await makePayment(paymentRequest, { params: Promise.resolve({ id: cardId }) })
+      const paymentResponse = await makePayment(paymentRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const paymentResponseData = await paymentResponse.json()
 
       expect(paymentResponse.status).toBe(200)
       expect(paymentResponseData.success).toBe(true)
 
-      const getAfterPaymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`)
-      const getAfterPaymentResponse = await getCard(getAfterPaymentRequest, { params: Promise.resolve({ id: cardId }) })
+      const getAfterPaymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}`)
+      const getAfterPaymentResponse = await getCard(getAfterPaymentRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const getAfterPaymentData = await getAfterPaymentResponse.json()
 
       expect(getAfterPaymentData.data.balance).toBe('7000')
@@ -330,13 +369,13 @@ describe('Card Management Integration Tests', () => {
         type: 'PREPAID',
         lastFourDigits: '7890',
         accountId: testAccount.id,
-        balance: 1000
+        balance: 1000,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
@@ -346,16 +385,18 @@ describe('Card Management Integration Tests', () => {
       const paymentData = {
         amount: 2000,
         currency: 'JPY',
-        description: 'Exceeding balance'
+        description: 'Exceeding balance',
       }
 
-      const paymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}/payment`, {
+      const paymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}/payment`, {
         method: 'POST',
         body: JSON.stringify(paymentData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
-      const paymentResponse = await makePayment(paymentRequest, { params: Promise.resolve({ id: cardId }) })
+      const paymentResponse = await makePayment(paymentRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const paymentResponseData = await paymentResponse.json()
 
       expect(paymentResponse.status).toBe(400)
@@ -370,13 +411,13 @@ describe('Card Management Integration Tests', () => {
         type: 'CREDIT',
         lastFourDigits: '1111',
         accountId: testAccount.id,
-        creditLimit: 100000
+        creditLimit: 100000,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
@@ -386,22 +427,24 @@ describe('Card Management Integration Tests', () => {
       const updateData = {
         name: 'Updated Card Name',
         creditLimit: 200000,
-        billingDate: 25
+        billingDate: 25,
       }
 
-      const updateRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`, {
+      const updateRequest = new Request(`http://localhost:3000/api/cards/${cardId}`, {
         method: 'PATCH',
         body: JSON.stringify(updateData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
-      const updateResponse = await updateCard(updateRequest, { params: Promise.resolve({ id: cardId }) })
+      const updateResponse = await updateCard(updateRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const updateResponseData = await updateResponse.json()
 
       expect(updateResponse.status).toBe(200)
       expect(updateResponseData.success).toBe(true)
 
-      const getRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`)
+      const getRequest = new Request(`http://localhost:3000/api/cards/${cardId}`)
       const getResponse = await getCard(getRequest, { params: Promise.resolve({ id: cardId }) })
       const getData = await getResponse.json()
 
@@ -416,30 +459,32 @@ describe('Card Management Integration Tests', () => {
         type: 'CREDIT',
         lastFourDigits: '2222',
         accountId: testAccount.id,
-        creditLimit: 100000
+        creditLimit: 100000,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
       const createData = await createResponse.json()
       const cardId = createData.data.id
 
-      const deleteRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`, {
-        method: 'DELETE'
+      const deleteRequest = new Request(`http://localhost:3000/api/cards/${cardId}`, {
+        method: 'DELETE',
       })
 
-      const deleteResponse = await deleteCard(deleteRequest, { params: Promise.resolve({ id: cardId }) })
+      const deleteResponse = await deleteCard(deleteRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const deleteResponseData = await deleteResponse.json()
 
       expect(deleteResponse.status).toBe(200)
       expect(deleteResponseData.message).toBe('Card deleted successfully')
 
-      const getRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`)
+      const getRequest = new Request(`http://localhost:3000/api/cards/${cardId}`)
       const getResponse = await getCard(getRequest, { params: Promise.resolve({ id: cardId }) })
 
       expect(getResponse.status).toBe(404)
@@ -451,13 +496,13 @@ describe('Card Management Integration Tests', () => {
         type: 'CREDIT',
         lastFourDigits: '3333',
         accountId: testAccount.id,
-        creditLimit: 100000
+        creditLimit: 100000,
       }
 
-      const createRequest = new NextRequest('http://localhost:3000/api/cards', {
+      const createRequest = new Request('http://localhost:3000/api/cards', {
         method: 'POST',
         body: JSON.stringify(cardData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       const createResponse = await createCard(createRequest)
@@ -467,28 +512,30 @@ describe('Card Management Integration Tests', () => {
       const paymentData = {
         amount: 5000,
         currency: 'JPY',
-        description: 'Transaction to prevent deletion'
+        description: 'Transaction to prevent deletion',
       }
 
-      const paymentRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}/payment`, {
+      const paymentRequest = new Request(`http://localhost:3000/api/cards/${cardId}/payment`, {
         method: 'POST',
         body: JSON.stringify(paymentData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
 
       await makePayment(paymentRequest, { params: Promise.resolve({ id: cardId }) })
 
-      const deleteRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`, {
-        method: 'DELETE'
+      const deleteRequest = new Request(`http://localhost:3000/api/cards/${cardId}`, {
+        method: 'DELETE',
       })
 
-      const deleteResponse = await deleteCard(deleteRequest, { params: Promise.resolve({ id: cardId }) })
+      const deleteResponse = await deleteCard(deleteRequest, {
+        params: Promise.resolve({ id: cardId }),
+      })
       const deleteResponseData = await deleteResponse.json()
 
       expect(deleteResponse.status).toBe(200)
       expect(deleteResponseData.message).toBe('Card deactivated (has existing transactions)')
 
-      const getRequest = new NextRequest(`http://localhost:3000/api/cards/${cardId}`)
+      const getRequest = new Request(`http://localhost:3000/api/cards/${cardId}`)
       const getResponse = await getCard(getRequest, { params: Promise.resolve({ id: cardId }) })
       const getData = await getResponse.json()
 

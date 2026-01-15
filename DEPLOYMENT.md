@@ -65,15 +65,15 @@ exports.handler = async (event, context) => {
   const response = await fetch(`${process.env.BETTER_AUTH_URL}/api/notifications/send-reminders`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.NOTIFICATION_API_KEY}`
-    }
-  });
-  
+      Authorization: `Bearer ${process.env.NOTIFICATION_API_KEY}`,
+    },
+  })
+
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true })
-  };
-};
+    body: JSON.stringify({ success: true }),
+  }
+}
 ```
 
 ### 3. Railway
@@ -87,7 +87,7 @@ Railway Cronを使用：
 
 [deploy]
   healthcheckPath = "/api/health"
-  
+
 # Cron job設定はRailway UIから設定
 # URL: https://your-app.railway.app/api/notifications/send-reminders
 # Schedule: 0 9 * * *
@@ -109,7 +109,7 @@ services:
   environment_slug: node-js
   instance_count: 1
   instance_size_slug: basic-xxs
-  
+
 jobs:
 - name: send-reminders
   source_dir: /
@@ -123,6 +123,7 @@ jobs:
 ### 5. 外部Cronサービス
 
 #### EasyCron
+
 ```bash
 # URL設定
 POST https://your-domain.com/api/notifications/send-reminders
@@ -135,6 +136,7 @@ Content-Type: application/json
 ```
 
 #### cron-job.org
+
 ```bash
 URL: https://your-domain.com/api/notifications/send-reminders
 Method: POST
@@ -163,27 +165,27 @@ kind: CronJob
 metadata:
   name: kibo-reminders
 spec:
-  schedule: "0 9 * * *"
+  schedule: '0 9 * * *'
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: reminder-job
-            image: curlimages/curl
-            args:
-            - /bin/sh
-            - -c
-            - >
-              curl -X POST 
-              -H "Authorization: Bearer $NOTIFICATION_API_KEY" 
-              https://your-domain.com/api/notifications/send-reminders
-            env:
-            - name: NOTIFICATION_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: kibo-secrets
-                  key: notification-api-key
+            - name: reminder-job
+              image: curlimages/curl
+              args:
+                - /bin/sh
+                - -c
+                - >
+                  curl -X POST 
+                  -H "Authorization: Bearer $NOTIFICATION_API_KEY" 
+                  https://your-domain.com/api/notifications/send-reminders
+              env:
+                - name: NOTIFICATION_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: kibo-secrets
+                      key: notification-api-key
           restartPolicy: OnFailure
 ```
 
@@ -205,26 +207,31 @@ curl -X POST \
 ## プラットフォーム選択の考慮点
 
 ### Vercel ✅
+
 - 簡単デプロイ
 - 組み込みCron機能
 - Hobby プラン制限あり
 
-### Netlify ✅  
+### Netlify ✅
+
 - 静的サイト最適化
 - Functions + Scheduled Functions
 - 制限がやや厳しい
 
 ### Railway ✅
+
 - フルスタックアプリに最適
 - PostgreSQL統合
 - スケーラブル
 
 ### DigitalOcean ✅
+
 - 柔軟な設定
 - 予測可能な料金
 - Managed Database対応
 
 ### 自前サーバー ✅
+
 - 完全制御
 - カスタマイズ自由
 - 運用負荷高

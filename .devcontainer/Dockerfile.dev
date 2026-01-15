@@ -1,18 +1,19 @@
-# DevContainer専用Dockerfile
-FROM node:20-alpine
+# DevContainer専用Dockerfile (Bun)
+FROM oven/bun:1
 
 # Install essential development tools
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     git \
     curl \
     bash \
     openssh-client \
     postgresql-client \
-    redis \
-    sudo
+    redis-tools \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-ARG USERNAME=node
+ARG USERNAME=bun
 ARG USER_UID=1000
 ARG USER_GID=1000
 
@@ -28,15 +29,14 @@ RUN chown -R $USERNAME:$USERNAME /app
 USER $USERNAME
 
 # Copy package files (from parent directory)
-COPY --chown=$USERNAME:$USERNAME ../package*.json ./
+COPY --chown=$USERNAME:$USERNAME ../package.json ../bun.lock ./
 
-# Install dependencies as node user
-RUN npm ci
+# Install dependencies as bun user
+RUN bun install --frozen-lockfile
 
 # Install global development tools (as root, then switch back)
 USER root
-RUN npm install -g \
-    tsx \
+RUN bun install -g \
     prisma \
     @biomejs/biome
 USER $USERNAME
@@ -45,7 +45,7 @@ USER $USERNAME
 COPY --chown=$USERNAME:$USERNAME ../ .
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN bunx prisma generate
 
 # Create and set permissions for .next directory
 RUN mkdir -p /app/.next && chown -R $USERNAME:$USERNAME /app/.next
@@ -54,16 +54,16 @@ RUN mkdir -p /app/.next && chown -R $USERNAME:$USERNAME /app/.next
 USER root
 # Create welcome script
 RUN echo '#!/bin/bash\n\
-echo "🚀 kiBoアプリ DevContainer Ready!"\n\
+echo "🚀 kiBoアプリ DevContainer Ready! (Bun)"\n\
 echo ""\n\
 echo "Available commands:"\n\
-echo "  npm run dev          - Start development server (port 3000)"\n\
-echo "  npm run test         - Run tests"\n\
-echo "  npm run lint         - Check code quality"\n\
-echo "  npm run db:push      - Push database schema"\n\
-echo "  npm run db:studio    - Open Prisma Studio manually"\n\
-echo "  npm run services:start - Start background services"\n\
-echo "  npm run services:stop  - Stop background services"\n\
+echo "  bun run dev          - Start development server (port 3000)"\n\
+echo "  bun test             - Run tests"\n\
+echo "  bun run lint         - Check code quality"\n\
+echo "  bun run db:push      - Push database schema"\n\
+echo "  bun run db:studio    - Open Prisma Studio manually"\n\
+echo "  bun run services:start - Start background services"\n\
+echo "  bun run services:stop  - Stop background services"\n\
 echo ""\n\
 echo "Access URLs:"\n\
 echo "  App:           http://localhost:3000"\n\
