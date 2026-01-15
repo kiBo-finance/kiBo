@@ -8,6 +8,13 @@ const config = {
   // which is loaded via NODE_OPTIONS in package.json build/start scripts
   unstable_viteConfigs: {
     common: () => ({
+      server: {
+        // Allow all hosts in production (typically behind reverse proxy)
+        // Or specify via ALLOWED_HOSTS env var (comma-separated)
+        allowedHosts: process.env.ALLOWED_HOSTS
+          ? process.env.ALLOWED_HOSTS.split(',')
+          : true,
+      },
       build: {
         rollupOptions: {
           external: ['@prisma/client', /^@prisma\/.*/],
