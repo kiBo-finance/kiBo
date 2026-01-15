@@ -1,14 +1,8 @@
 'use client'
 
-import {
-  getCards,
-  createCard as createCardAction,
-  updateCard as updateCardAction,
-  deleteCard as deleteCardAction,
-} from '../actions/cards'
 import { cardsAtom } from '../atoms/accounts'
 import type { CardType } from '@prisma/client'
-import { useSetAtom, useAtom } from 'jotai'
+import { useAtom } from 'jotai'
 import { useCallback, useEffect } from 'react'
 
 export function useCards() {
@@ -16,9 +10,14 @@ export function useCards() {
 
   const refreshCards = useCallback(async () => {
     try {
-      const data = await getCards()
-      if (data) {
-        setCards(data)
+      const response = await fetch('/api/cards', {
+        credentials: 'include',
+      })
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.data) {
+          setCards(result.data)
+        }
       }
     } catch (error) {
       console.error('Failed to fetch cards:', error)
@@ -44,12 +43,18 @@ export function useCards() {
       expiryDate?: Date
     }) => {
       try {
-        const result = await createCardAction(cardData)
+        const response = await fetch('/api/cards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(cardData),
+        })
+        const result = await response.json()
         if (result.success) {
           await refreshCards()
           return result
         }
-        return result
+        return { success: false, error: result.error || 'Failed to create card' }
       } catch (error) {
         console.error('Failed to create card:', error)
         return { success: false, error: 'Failed to create card' }
@@ -78,12 +83,18 @@ export function useCards() {
       }>
     ) => {
       try {
-        const result = await updateCardAction(cardId, cardData)
+        const response = await fetch(`/api/cards/${cardId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(cardData),
+        })
+        const result = await response.json()
         if (result.success) {
           await refreshCards()
           return result
         }
-        return result
+        return { success: false, error: result.error || 'Failed to update card' }
       } catch (error) {
         console.error('Failed to update card:', error)
         return { success: false, error: 'Failed to update card' }
@@ -95,12 +106,16 @@ export function useCards() {
   const deleteCard = useCallback(
     async (cardId: string) => {
       try {
-        const result = await deleteCardAction(cardId)
+        const response = await fetch(`/api/cards/${cardId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        })
+        const result = await response.json()
         if (result.success) {
           await refreshCards()
           return result
         }
-        return result
+        return { success: false, error: result.error || 'Failed to delete card' }
       } catch (error) {
         console.error('Failed to delete card:', error)
         return { success: false, error: 'Failed to delete card' }

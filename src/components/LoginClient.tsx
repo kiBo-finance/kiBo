@@ -2,6 +2,7 @@
 
 import { Link, useRouter } from 'waku/router/client'
 import { useState } from 'react'
+import { signIn } from '../lib/auth-client'
 
 import { Button } from './ui/button'
 import {
@@ -28,17 +29,22 @@ export function LoginClient() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/sign-in/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn.email({
+        email,
+        password,
       })
 
-      if (response.ok) {
-        router.push('/dashboard')
+      if (result.error) {
+        if (result.error.code === 'EMAIL_NOT_VERIFIED') {
+          setError('メールアドレスの認証が必要です')
+        } else if (result.error.code === 'INVALID_EMAIL_OR_PASSWORD') {
+          setError('メールアドレスまたはパスワードが正しくありません')
+        } else {
+          setError(result.error.message || 'ログインに失敗しました')
+        }
       } else {
-        const data = await response.json()
-        setError(data.error || 'ログインに失敗しました')
+        // Use full page navigation to ensure AuthProvider remounts with new session
+        window.location.href = '/dashboard'
       }
     } catch {
       setError('ログインに失敗しました')

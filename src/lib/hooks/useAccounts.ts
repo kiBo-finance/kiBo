@@ -1,14 +1,8 @@
 'use client'
 
-import {
-  getAccounts,
-  createAccount as createAccountAction,
-  updateAccount as updateAccountAction,
-  deleteAccount as deleteAccountAction,
-} from '../actions/accounts'
 import { accountsAtom } from '../atoms/accounts'
 import type { AccountType } from '@prisma/client'
-import { useSetAtom, useAtom } from 'jotai'
+import { useAtom } from 'jotai'
 import { useCallback, useEffect } from 'react'
 
 export function useAccounts() {
@@ -16,9 +10,14 @@ export function useAccounts() {
 
   const refreshAccounts = useCallback(async () => {
     try {
-      const data = await getAccounts()
-      if (data) {
-        setAccounts(data)
+      const response = await fetch('/api/accounts', {
+        credentials: 'include',
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (Array.isArray(data)) {
+          setAccounts(data)
+        }
       }
     } catch (error) {
       console.error('Failed to fetch accounts:', error)
@@ -36,12 +35,19 @@ export function useAccounts() {
       fixedDepositMaturity?: Date
     }) => {
       try {
-        const result = await createAccountAction(accountData)
-        if (result.success) {
+        const response = await fetch('/api/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(accountData),
+        })
+        if (response.ok) {
+          const data = await response.json()
           await refreshAccounts()
-          return result
+          return { success: true, data }
         }
-        return result
+        const error = await response.json()
+        return { success: false, error: error.error || 'Failed to create account' }
       } catch (error) {
         console.error('Failed to create account:', error)
         return { success: false, error: 'Failed to create account' }
@@ -62,12 +68,19 @@ export function useAccounts() {
       }>
     ) => {
       try {
-        const result = await updateAccountAction(accountId, accountData)
-        if (result.success) {
+        const response = await fetch(`/api/accounts/${accountId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(accountData),
+        })
+        if (response.ok) {
+          const data = await response.json()
           await refreshAccounts()
-          return result
+          return { success: true, data }
         }
-        return result
+        const error = await response.json()
+        return { success: false, error: error.error || 'Failed to update account' }
       } catch (error) {
         console.error('Failed to update account:', error)
         return { success: false, error: 'Failed to update account' }
@@ -79,12 +92,16 @@ export function useAccounts() {
   const deleteAccount = useCallback(
     async (accountId: string) => {
       try {
-        const result = await deleteAccountAction(accountId)
-        if (result.success) {
+        const response = await fetch(`/api/accounts/${accountId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        })
+        if (response.ok) {
           await refreshAccounts()
-          return result
+          return { success: true }
         }
-        return result
+        const error = await response.json()
+        return { success: false, error: error.error || 'Failed to delete account' }
       } catch (error) {
         console.error('Failed to delete account:', error)
         return { success: false, error: 'Failed to delete account' }

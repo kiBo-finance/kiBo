@@ -39,12 +39,14 @@ export function CardList() {
   const [selectedCard, setSelectedCard] = useState<CardWithAccount | null>(null)
   const [showDetail, setShowDetail] = useState(false)
 
-  // Set loading to false once cards are available
+  // Load cards and set loading to false when done
   useEffect(() => {
-    if (cards.length > 0) {
+    const loadCards = async () => {
+      await refreshCards()
       setLoading(false)
     }
-  }, [cards])
+    loadCards()
+  }, [])
 
   // Cards are automatically loaded by useCards hook
 
