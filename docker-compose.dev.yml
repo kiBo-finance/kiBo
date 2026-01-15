@@ -1,6 +1,6 @@
 services:
   migrate:
-    image: node:20-alpine
+    image: oven/bun:1
     working_dir: /app
     environment:
       - DATABASE_URL=postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
@@ -8,7 +8,7 @@ services:
       - .:/app
     networks:
       - kibo_kibo-network
-    command: sh -c "npm install && npx prisma db push"
+    command: sh -c "bun install && bunx prisma db push"
     profiles:
       - migration
 

@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://kibo_user:kibo_password@postgres:5432/kibo_dev
@@ -28,19 +28,19 @@ services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_DB: kibo_dev
       POSTGRES_USER: kibo_user
       POSTGRES_PASSWORD: kibo_password
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --locale=C'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - kibo-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kibo_user -d kibo_dev"]
+      test: ['CMD-SHELL', 'pg_isready -U kibo_user -d kibo_dev']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,14 +49,14 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
       - kibo-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 3

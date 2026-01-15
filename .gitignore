@@ -4,6 +4,7 @@
 /node_modules
 /.pnp
 .pnp.js
+package-lock.json
 
 # testing
 /coverage
@@ -11,6 +12,10 @@
 # next.js
 /.next/
 /out/
+
+# waku
+/dist/
+/tmp-types/
 
 # production
 /build
@@ -41,6 +46,7 @@ prisma/migrations/
 # ide
 .vscode/
 .idea/
+.serena/
 
 # OS
 Thumbs.db

@@ -7,16 +7,19 @@
 ## 振替の種類
 
 ### 1. 同一通貨間振替
+
 - 現金 → 銀行口座
 - 普通預金 → 貯蓄預金
 - 口座A → 口座B（同じ通貨）
 
 ### 2. 異なる通貨間振替
+
 - JPY口座 → USD口座
 - 現金（JPY） → 外貨預金（USD）
 - 外貨預金間の振替
 
 ### 3. 手数料を伴う振替
+
 - 振込手数料
 - 外貨両替手数料
 - ATM利用手数料
@@ -38,7 +41,7 @@ model Transaction {
   cardId      String?
   categoryId  String?
   userId      String
-  
+
   // 振替機能用フィールド
   transferToAccountId   String?  // 振替先口座ID
   transferFromAccountId String?  // 振替元口座ID（明示的）
@@ -49,7 +52,7 @@ model Transaction {
   transferFeeAccountId String?  // 手数料を差し引く口座
   isTransfer          Boolean  @default(false)   // 振替取引フラグ
   transferPairId      String?  // 対となる取引のID
-  
+
   // 既存フィールド
   exchangeRate         Decimal? @db.Decimal(15,8)
   baseCurrencyAmount   Decimal? @db.Decimal(15,4)
@@ -58,28 +61,28 @@ model Transaction {
   notes                String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-  
+
   // リレーション
   user                 User      @relation(fields: [userId], references: [id])
   account              Account   @relation(fields: [accountId], references: [id])
   card                 Card?     @relation(fields: [cardId], references: [id])
   category             Category? @relation(fields: [categoryId], references: [id])
   currencyRef          Currency  @relation(fields: [currency], references: [code])
-  
+
   // 振替用リレーション
   transferToAccount    Account?  @relation("TransferTo", fields: [transferToAccountId], references: [id])
   transferFromAccount  Account?  @relation("TransferFrom", fields: [transferFromAccountId], references: [id])
   transferFeeAccount   Account?  @relation("TransferFee", fields: [transferFeeAccountId], references: [id])
   transferPair         Transaction? @relation("TransferPair", fields: [transferPairId], references: [id])
   transferPairReverse  Transaction? @relation("TransferPair")
-  
+
   @@map("transactions")
 }
 
 // Accountモデルにリレーション追加
 model Account {
   // 既存フィールド...
-  
+
   // リレーション追加
   transfersTo          Transaction[] @relation("TransferTo")
   transfersFrom        Transaction[] @relation("TransferFrom")
@@ -128,35 +131,35 @@ export class TransferService {
   static async createSameCurrencyTransfer(
     userId: string,
     data: TransferData
-  ): Promise<{ fromTransaction: Transaction, toTransaction: Transaction }> {
+  ): Promise<{ fromTransaction: Transaction; toTransaction: Transaction }> {
     return await prisma.$transaction(async (tx) => {
       // 振替元口座の残高確認
       const fromAccount = await tx.account.findFirst({
-        where: { id: data.fromAccountId, userId }
+        where: { id: data.fromAccountId, userId },
       })
-      
+
       if (!fromAccount) {
         throw new Error('振替元口座が見つかりません')
       }
-      
+
       const totalAmount = CurrencyCalculator.add(data.amount, data.fee || 0)
       if (Number(fromAccount.balance) < totalAmount) {
         throw new Error('残高が不足しています')
       }
-      
+
       // 振替先口座の確認
       const toAccount = await tx.account.findFirst({
-        where: { id: data.toAccountId, userId }
+        where: { id: data.toAccountId, userId },
       })
-      
+
       if (!toAccount) {
         throw new Error('振替先口座が見つかりません')
       }
-      
+
       if (fromAccount.currency !== toAccount.currency) {
         throw new Error('通貨が異なる口座間の振替です。通貨間振替機能を使用してください')
       }
-      
+
       // 振替元取引作成（支出）
       const fromTransaction = await tx.transaction.create({
         data: {
@@ -175,9 +178,9 @@ export class TransferService {
           transferFee: data.fee ? new Decimal(data.fee) : null,
           transferFeeAccountId: data.feeAccountId || data.fromAccountId,
           notes: data.notes,
-        }
+        },
       })
-      
+
       // 振替先取引作成（収入）
       const toTransaction = await tx.transaction.create({
         data: {
@@ -195,34 +198,34 @@ export class TransferService {
           transferCurrency: toAccount.currency,
           transferPairId: fromTransaction.id,
           notes: data.notes,
-        }
+        },
       })
-      
+
       // 振替元取引に対となる取引IDを設定
       await tx.transaction.update({
         where: { id: fromTransaction.id },
-        data: { transferPairId: toTransaction.id }
+        data: { transferPairId: toTransaction.id },
       })
-      
+
       // 口座残高更新
       await tx.account.update({
         where: { id: data.fromAccountId },
         data: {
           balance: {
-            decrement: totalAmount
-          }
-        }
+            decrement: totalAmount,
+          },
+        },
       })
-      
+
       await tx.account.update({
         where: { id: data.toAccountId },
         data: {
           balance: {
-            increment: data.amount
-          }
-        }
+            increment: data.amount,
+          },
+        },
       })
-      
+
       // 手数料処理（振替元口座と異なる場合）
       if (data.fee && data.feeAccountId && data.feeAccountId !== data.fromAccountId) {
         await tx.transaction.create({
@@ -234,48 +237,48 @@ export class TransferService {
             date: data.date,
             accountId: data.feeAccountId,
             userId,
-          }
+          },
         })
-        
+
         await tx.account.update({
           where: { id: data.feeAccountId },
           data: {
-            balance: { decrement: data.fee }
-          }
+            balance: { decrement: data.fee },
+          },
         })
       }
-      
+
       return { fromTransaction, toTransaction }
     })
   }
-  
+
   /**
    * 異なる通貨間振替
    */
   static async createCurrencyTransfer(
     userId: string,
     data: CurrencyTransferData
-  ): Promise<{ fromTransaction: Transaction, toTransaction: Transaction }> {
+  ): Promise<{ fromTransaction: Transaction; toTransaction: Transaction }> {
     return await prisma.$transaction(async (tx) => {
       // 口座確認
       const fromAccount = await tx.account.findFirst({
-        where: { id: data.fromAccountId, userId }
+        where: { id: data.fromAccountId, userId },
       })
-      
+
       const toAccount = await tx.account.findFirst({
-        where: { id: data.toAccountId, userId }
+        where: { id: data.toAccountId, userId },
       })
-      
+
       if (!fromAccount || !toAccount) {
         throw new Error('口座が見つかりません')
       }
-      
+
       // 残高確認
       const totalAmount = CurrencyCalculator.add(data.amount, data.fee || 0)
       if (Number(fromAccount.balance) < totalAmount) {
         throw new Error('残高が不足しています')
       }
-      
+
       // 振替元取引作成
       const fromTransaction = await tx.transaction.create({
         data: {
@@ -295,9 +298,9 @@ export class TransferService {
           transferFee: data.fee ? new Decimal(data.fee) : null,
           transferFeeAccountId: data.feeAccountId || data.fromAccountId,
           notes: data.notes,
-        }
+        },
       })
-      
+
       // 振替先取引作成
       const toTransaction = await tx.transaction.create({
         data: {
@@ -316,26 +319,26 @@ export class TransferService {
           exchangeRateUsed: new Decimal(data.exchangeRate),
           transferPairId: fromTransaction.id,
           notes: data.notes,
-        }
+        },
       })
-      
+
       // ペア関係設定
       await tx.transaction.update({
         where: { id: fromTransaction.id },
-        data: { transferPairId: toTransaction.id }
+        data: { transferPairId: toTransaction.id },
       })
-      
+
       // 残高更新
       await tx.account.update({
         where: { id: data.fromAccountId },
-        data: { balance: { decrement: totalAmount } }
+        data: { balance: { decrement: totalAmount } },
       })
-      
+
       await tx.account.update({
         where: { id: data.toAccountId },
-        data: { balance: { increment: data.toAmount } }
+        data: { balance: { increment: data.toAmount } },
       })
-      
+
       return { fromTransaction, toTransaction }
     })
   }
@@ -379,7 +382,7 @@ interface TransferFormData {
 export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) => void }) {
   const accounts = useAtomValue(accountsAtom)
   const rateMap = useAtomValue(exchangeRateMapAtom)
-  
+
   const [formData, setFormData] = useState<TransferFormData>({
     fromAccountId: '',
     toAccountId: '',
@@ -392,13 +395,13 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
     useCustomRate: false,
     customRate: 1,
   })
-  
+
   const [calculatedAmount, setCalculatedAmount] = useState(0)
   const [isDifferentCurrency, setIsDifferentCurrency] = useState(false)
-  
+
   const fromAccount = accounts.find(a => a.id === formData.fromAccountId)
   const toAccount = accounts.find(a => a.id === formData.toAccountId)
-  
+
   // 通貨が異なるかチェック
   useEffect(() => {
     if (fromAccount && toAccount) {
@@ -406,22 +409,22 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
       setFormData(prev => ({ ...prev, feeAccountId: prev.feeAccountId || fromAccount.id }))
     }
   }, [fromAccount, toAccount])
-  
+
   // 金額自動計算
   useEffect(() => {
     if (fromAccount && toAccount && formData.amount > 0) {
       if (isDifferentCurrency) {
-        const rate = formData.useCustomRate 
+        const rate = formData.useCustomRate
           ? formData.customRate
           : rateMap.get(`${fromAccount.currency}-${toAccount.currency}`) || 1
-        
+
         setCalculatedAmount(CurrencyCalculator.multiply(formData.amount, rate))
       } else {
         setCalculatedAmount(formData.amount)
       }
     }
   }, [formData.amount, fromAccount, toAccount, isDifferentCurrency, formData.useCustomRate, formData.customRate, rateMap])
-  
+
   const handleSwapAccounts = () => {
     setFormData(prev => ({
       ...prev,
@@ -429,15 +432,15 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
       toAccountId: prev.fromAccountId,
     }))
   }
-  
+
   const getCurrentRate = () => {
     if (!fromAccount || !toAccount || !isDifferentCurrency) return 1
     return rateMap.get(`${fromAccount.currency}-${toAccount.currency}`) || 1
   }
-  
-  const canTransfer = fromAccount && toAccount && formData.amount > 0 && 
+
+  const canTransfer = fromAccount && toAccount && formData.amount > 0 &&
     Number(fromAccount.balance) >= (formData.amount + formData.fee)
-  
+
   return (
     <Card>
       <CardHeader>
@@ -448,8 +451,8 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div className="space-y-2">
             <Label>振替元口座</Label>
-            <Select 
-              value={formData.fromAccountId} 
+            <Select
+              value={formData.fromAccountId}
               onValueChange={(value) => setFormData(prev => ({ ...prev, fromAccountId: value }))}
             >
               <SelectTrigger>
@@ -464,7 +467,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex justify-center">
             <Button
               type="button"
@@ -477,11 +480,11 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
               <ArrowRightLeft className="w-4 h-4" />
             </Button>
           </div>
-          
+
           <div className="space-y-2">
             <Label>振替先口座</Label>
-            <Select 
-              value={formData.toAccountId} 
+            <Select
+              value={formData.toAccountId}
               onValueChange={(value) => setFormData(prev => ({ ...prev, toAccountId: value }))}
             >
               <SelectTrigger>
@@ -499,7 +502,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
             </Select>
           </div>
         </div>
-        
+
         {/* 金額入力 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -518,7 +521,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
               </div>
             )}
           </div>
-          
+
           {isDifferentCurrency && (
             <div className="space-y-2">
               <Label>受取金額</Label>
@@ -535,7 +538,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
             </div>
           )}
         </div>
-        
+
         {/* カスタムレート（通貨間振替時） */}
         {isDifferentCurrency && (
           <div className="space-y-4">
@@ -546,7 +549,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
               />
               <Label>カスタム為替レートを使用</Label>
             </div>
-            
+
             {formData.useCustomRate && (
               <div className="space-y-2">
                 <Label>為替レート</Label>
@@ -564,7 +567,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
             )}
           </div>
         )}
-        
+
         {/* 手数料 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -578,12 +581,12 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
               placeholder="手数料（任意）"
             />
           </div>
-          
+
           {formData.fee > 0 && (
             <div className="space-y-2">
               <Label>手数料支払口座</Label>
-              <Select 
-                value={formData.feeAccountId} 
+              <Select
+                value={formData.feeAccountId}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, feeAccountId: value }))}
               >
                 <SelectTrigger>
@@ -600,7 +603,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
             </div>
           )}
         </div>
-        
+
         {/* 説明・メモ */}
         <div className="space-y-4">
           <div className="space-y-2">
@@ -611,7 +614,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
               placeholder="振替の説明を入力"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label>メモ（任意）</Label>
             <Textarea
@@ -622,7 +625,7 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
             />
           </div>
         </div>
-        
+
         {/* 実行ボタン */}
         <div className="flex justify-end space-x-4">
           <Button
@@ -635,9 +638,9 @@ export function TransferForm({ onSubmit }: { onSubmit: (data: TransferFormData) 
             振替実行
           </Button>
         </div>
-        
+
         {/* 警告表示 */}
-        {fromAccount && formData.amount > 0 && 
+        {fromAccount && formData.amount > 0 &&
          Number(fromAccount.balance) < (formData.amount + formData.fee) && (
           <div className="p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
             残高が不足しています。振替金額と手数料の合計が残高を超えています。
@@ -665,13 +668,13 @@ export async function createTransferAction(data: TransferData) {
   if (!session) {
     throw new Error('Unauthorized')
   }
-  
+
   const result = await TransferService.createSameCurrencyTransfer(session.user.id, data)
-  
+
   revalidatePath('/dashboard/accounts')
   revalidatePath('/dashboard/transactions')
   revalidatePath('/dashboard')
-  
+
   return result
 }
 
@@ -680,13 +683,13 @@ export async function createCurrencyTransferAction(data: CurrencyTransferData) {
   if (!session) {
     throw new Error('Unauthorized')
   }
-  
+
   const result = await TransferService.createCurrencyTransfer(session.user.id, data)
-  
+
   revalidatePath('/dashboard/accounts')
   revalidatePath('/dashboard/transactions')
   revalidatePath('/dashboard')
-  
+
   return result
 }
 ```
@@ -701,21 +704,18 @@ import type { Transaction } from '@prisma/client'
 // 振替取引のフィルタリング
 export const transferTransactionsAtom = atom((get) => {
   const transactions = get(transactionsAtom)
-  return transactions.filter(tx => tx.isTransfer)
+  return transactions.filter((tx) => tx.isTransfer)
 })
 
 // 振替ペアの取得
-export const getTransferPairAtom = atom(
-  null,
-  (get, set, transactionId: string) => {
-    const transactions = get(transactionsAtom)
-    const transaction = transactions.find(tx => tx.id === transactionId)
-    
-    if (!transaction?.transferPairId) return null
-    
-    return transactions.find(tx => tx.id === transaction.transferPairId) || null
-  }
-)
+export const getTransferPairAtom = atom(null, (get, set, transactionId: string) => {
+  const transactions = get(transactionsAtom)
+  const transaction = transactions.find((tx) => tx.id === transactionId)
+
+  if (!transaction?.transferPairId) return null
+
+  return transactions.find((tx) => tx.id === transaction.transferPairId) || null
+})
 ```
 
 ## API Routes
@@ -731,15 +731,15 @@ import { handleApiError } from '@/lib/utils/errors'
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
-      headers: request.headers
+      headers: request.headers,
     })
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
     const body = await request.json()
-    
+
     // 通貨間振替か同一通貨振替かを判定
     if (body.fromCurrency && body.toCurrency && body.fromCurrency !== body.toCurrency) {
       const validatedData = createCurrencyTransferSchema.parse(body)
@@ -747,7 +747,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result, { status: 201 })
     } else {
       const validatedData = createTransferSchema.parse(body)
-      const result = await TransferService.createSameCurrencyTransfer(session.user.id, validatedData)
+      const result = await TransferService.createSameCurrencyTransfer(
+        session.user.id,
+        validatedData
+      )
       return NextResponse.json(result, { status: 201 })
     }
   } catch (error) {
@@ -762,22 +765,21 @@ export async function POST(request: NextRequest) {
 // lib/validations/transfer.ts
 import { z } from 'zod'
 
-export const createTransferSchema = z.object({
-  fromAccountId: z.string().cuid('有効な振替元口座を選択してください'),
-  toAccountId: z.string().cuid('有効な振替先口座を選択してください'),
-  amount: z.number().positive('金額は正の数で入力してください'),
-  description: z.string().min(1, '説明は必須です').max(200),
-  date: z.date(),
-  fee: z.number().min(0).optional(),
-  feeAccountId: z.string().cuid().optional(),
-  notes: z.string().max(1000).optional(),
-}).refine(
-  (data) => data.fromAccountId !== data.toAccountId,
-  {
+export const createTransferSchema = z
+  .object({
+    fromAccountId: z.string().cuid('有効な振替元口座を選択してください'),
+    toAccountId: z.string().cuid('有効な振替先口座を選択してください'),
+    amount: z.number().positive('金額は正の数で入力してください'),
+    description: z.string().min(1, '説明は必須です').max(200),
+    date: z.date(),
+    fee: z.number().min(0).optional(),
+    feeAccountId: z.string().cuid().optional(),
+    notes: z.string().max(1000).optional(),
+  })
+  .refine((data) => data.fromAccountId !== data.toAccountId, {
     message: '振替元と振替先は異なる口座を選択してください',
-    path: ['toAccountId']
-  }
-)
+    path: ['toAccountId'],
+  })
 
 export const createCurrencyTransferSchema = createTransferSchema.extend({
   fromCurrency: z.string().length(3),
@@ -806,24 +808,24 @@ import { formatDate } from 'date-fns'
 
 export function TransferHistory() {
   const transfers = useAtomValue(transferTransactionsAtom)
-  
+
   // 振替ペアをグループ化
   const groupedTransfers = transfers.reduce((acc, transfer) => {
     if (!transfer.transferPairId) return acc
-    
-    const existingGroup = acc.find(group => 
+
+    const existingGroup = acc.find(group =>
       group.some(tx => tx.id === transfer.transferPairId || tx.transferPairId === transfer.id)
     )
-    
+
     if (existingGroup) {
       existingGroup.push(transfer)
     } else {
       acc.push([transfer])
     }
-    
+
     return acc
   }, [] as Transaction[][])
-  
+
   return (
     <Card>
       <CardHeader>
@@ -840,9 +842,9 @@ export function TransferHistory() {
             {groupedTransfers.map((pair, index) => {
               const fromTx = pair.find(tx => tx.transferFromAccountId === tx.accountId)
               const toTx = pair.find(tx => tx.transferToAccountId === tx.accountId)
-              
+
               if (!fromTx || !toTx) return null
-              
+
               return (
                 <div key={index} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
@@ -855,7 +857,7 @@ export function TransferHistory() {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <div className="text-center">
                       <div className="text-sm text-gray-600">振替元</div>
@@ -864,7 +866,7 @@ export function TransferHistory() {
                         -{CurrencyCalculator.formatCurrency(Number(fromTx.amount), fromTx.currency)}
                       </div>
                     </div>
-                    
+
                     <div className="text-center">
                       <ArrowRightLeft className="w-6 h-6 mx-auto text-gray-400" />
                       <div className="text-sm mt-1">{fromTx.description}</div>
@@ -874,7 +876,7 @@ export function TransferHistory() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="text-center">
                       <div className="text-sm text-gray-600">振替先</div>
                       <div className="font-medium">{toTx.account.name}</div>
@@ -883,7 +885,7 @@ export function TransferHistory() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {fromTx.notes && (
                     <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
                       {fromTx.notes}

@@ -1,69 +1,80 @@
-/**
- * @jest-environment node
- */
-import { NextRequest } from 'next/server'
-import { POST, GET } from '@/app/api/transactions/route'
-import { GET as GET_ID, PUT, DELETE } from '@/app/api/transactions/[id]/route'
-import { prisma } from '@/lib/db'
+import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import Decimal from 'decimal.js'
 
-// Mock global Request if not available
-if (typeof global.Request === 'undefined') {
-  const { Request } = require('node-fetch')
-  global.Request = Request
-}
+// Create mock functions
+const mockTransactionCreate = mock(() => Promise.resolve({}))
+const mockTransactionFindMany = mock(() => Promise.resolve([]))
+const mockTransactionFindFirst = mock(() => Promise.resolve(null))
+const mockTransactionUpdate = mock(() => Promise.resolve({}))
+const mockTransactionDelete = mock(() => Promise.resolve({}))
+const mockTransactionCount = mock(() => Promise.resolve(0))
+const mockTransactionAggregate = mock(() => Promise.resolve({ _sum: { amount: null } }))
+const mockTransactionGroupBy = mock(() => Promise.resolve([]))
+const mockCurrencyFindUnique = mock(() => Promise.resolve(null))
+const mockAppAccountFindFirst = mock(() => Promise.resolve(null))
+const mockAppAccountUpdate = mock(() => Promise.resolve({}))
+const mockCardFindFirst = mock(() => Promise.resolve(null))
+const mockCategoryFindFirst = mock(() => Promise.resolve(null))
+const mockPrismaTransaction = mock((callback: Function) => callback({}))
+const mockGetSession = mock(() => Promise.resolve(null))
+const mockHeaders = mock(() => Promise.resolve({}))
 
-// Mock dependencies
-jest.mock('@/lib/auth')
-jest.mock('@/lib/db', () => ({
+// Mock dependencies before imports
+mock.module('~/lib/auth', () => ({
+  auth: {
+    api: {
+      getSession: mockGetSession,
+    },
+  },
+}))
+
+mock.module('~/lib/db', () => ({
   prisma: {
     transaction: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn(),
-      aggregate: jest.fn(),
-      groupBy: jest.fn(),
+      create: mockTransactionCreate,
+      findMany: mockTransactionFindMany,
+      findFirst: mockTransactionFindFirst,
+      update: mockTransactionUpdate,
+      delete: mockTransactionDelete,
+      count: mockTransactionCount,
+      aggregate: mockTransactionAggregate,
+      groupBy: mockTransactionGroupBy,
     },
     currency: {
-      findUnique: jest.fn(),
+      findUnique: mockCurrencyFindUnique,
     },
     appAccount: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
+      findFirst: mockAppAccountFindFirst,
+      update: mockAppAccountUpdate,
     },
     card: {
-      findFirst: jest.fn(),
+      findFirst: mockCardFindFirst,
     },
     category: {
-      findFirst: jest.fn(),
+      findFirst: mockCategoryFindFirst,
     },
-    $transaction: jest.fn(),
-  }
+    $transaction: mockPrismaTransaction,
+  },
 }))
 
-jest.mock('next/headers', () => ({
-  headers: jest.fn(() => Promise.resolve({}))
+mock.module('next/headers', () => ({
+  headers: mockHeaders,
 }))
 
-const mockAuth = {
-  api: {
-    getSession: jest.fn()
-  }
-}
-
-require('@/lib/auth').auth = mockAuth
+// Import after mocking
+import { GET as GET_ID, PUT, DELETE } from '~/pages/_api/transactions/[id]'
+import { POST, GET } from '~/pages/_api/transactions/index'
+import { prisma } from '~/lib/db'
+import { NextRequest } from 'next/server'
 
 // Mock data
 const mockUser = {
   id: 'user-1',
-  email: 'test@example.com'
+  email: 'test@example.com',
 }
 
 const mockSession = {
-  user: mockUser
+  user: mockUser,
 }
 
 const mockCurrency = {
@@ -71,7 +82,7 @@ const mockCurrency = {
   symbol: '¥',
   name: '日本円',
   decimals: 0,
-  isActive: true
+  isActive: true,
 }
 
 const mockAccount = {
@@ -80,7 +91,7 @@ const mockAccount = {
   type: 'CHECKING',
   balance: new Decimal('100000'),
   currency: 'JPY',
-  userId: 'user-1'
+  userId: 'user-1',
 }
 
 const mockTransaction = {
@@ -101,25 +112,43 @@ const mockTransaction = {
   updatedAt: new Date(),
   account: {
     ...mockAccount,
-    currencyRef: mockCurrency
+    currencyRef: mockCurrency,
   },
   card: null,
   category: null,
-  currencyRef: mockCurrency
+  currencyRef: mockCurrency,
 }
 
 describe('/api/transactions', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockTransactionCreate.mockReset()
+    mockTransactionFindMany.mockReset()
+    mockTransactionFindFirst.mockReset()
+    mockTransactionUpdate.mockReset()
+    mockTransactionDelete.mockReset()
+    mockTransactionCount.mockReset()
+    mockTransactionAggregate.mockReset()
+    mockTransactionGroupBy.mockReset()
+    mockCurrencyFindUnique.mockReset()
+    mockAppAccountFindFirst.mockReset()
+    mockAppAccountUpdate.mockReset()
+    mockCardFindFirst.mockReset()
+    mockCategoryFindFirst.mockReset()
+    mockPrismaTransaction.mockReset()
+    mockGetSession.mockReset()
+    mockHeaders.mockReset()
   })
 
   describe('POST /api/transactions', () => {
     it('should create a new transaction successfully', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.currency.findUnique as jest.Mock).mockResolvedValue(mockCurrency)
-      ;(prisma.appAccount.findFirst as jest.Mock).mockResolvedValue(mockAccount)
-      ;(prisma.transaction.create as jest.Mock).mockResolvedValue(mockTransaction)
-      ;(prisma.appAccount.update as jest.Mock).mockResolvedValue({ ...mockAccount, balance: new Decimal('95000') })
+      mockGetSession.mockResolvedValue(mockSession)
+      mockCurrencyFindUnique.mockResolvedValue(mockCurrency)
+      mockAppAccountFindFirst.mockResolvedValue(mockAccount)
+      mockTransactionCreate.mockResolvedValue(mockTransaction)
+      mockAppAccountUpdate.mockResolvedValue({
+        ...mockAccount,
+        balance: new Decimal('95000'),
+      })
 
       const request = new NextRequest('http://localhost:3000/api/transactions', {
         method: 'POST',
@@ -131,8 +160,8 @@ describe('/api/transactions', () => {
           description: 'ランチ',
           date: '2024-01-15T12:00:00.000Z',
           accountId: 'account-1',
-          tags: ['食事']
-        })
+          tags: ['食事'],
+        }),
       })
 
       const response = await POST(request)
@@ -142,24 +171,24 @@ describe('/api/transactions', () => {
       expect(data.success).toBe(true)
       expect(data.data.amount).toBe('5000')
       expect(data.data.description).toBe('ランチ')
-      
+
       // Account balance should be updated
       expect(prisma.appAccount.update).toHaveBeenCalledWith({
         where: { id: 'account-1' },
         data: {
           balance: {
-            increment: -5000 // Expense should decrease balance
-          }
-        }
+            increment: -5000, // Expense should decrease balance
+          },
+        },
       })
     })
 
     it('should reject unauthenticated requests', async () => {
-      mockAuth.api.getSession.mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/transactions', {
         method: 'POST',
-        body: JSON.stringify({})
+        body: JSON.stringify({}),
       })
 
       const response = await POST(request)
@@ -170,14 +199,14 @@ describe('/api/transactions', () => {
     })
 
     it('should validate required fields', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
+      mockGetSession.mockResolvedValue(mockSession)
 
       const request = new NextRequest('http://localhost:3000/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           // Missing required fields
-        })
+        }),
       })
 
       const response = await POST(request)
@@ -188,8 +217,8 @@ describe('/api/transactions', () => {
     })
 
     it('should reject invalid currency', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.currency.findUnique as jest.Mock).mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockCurrencyFindUnique.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/transactions', {
         method: 'POST',
@@ -200,8 +229,8 @@ describe('/api/transactions', () => {
           type: 'EXPENSE',
           description: 'Test',
           date: '2024-01-15T12:00:00.000Z',
-          accountId: 'account-1'
-        })
+          accountId: 'account-1',
+        }),
       })
 
       const response = await POST(request)
@@ -212,9 +241,9 @@ describe('/api/transactions', () => {
     })
 
     it('should reject non-owned account', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.currency.findUnique as jest.Mock).mockResolvedValue(mockCurrency)
-      ;(prisma.appAccount.findFirst as jest.Mock).mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockCurrencyFindUnique.mockResolvedValue(mockCurrency)
+      mockAppAccountFindFirst.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/transactions', {
         method: 'POST',
@@ -225,8 +254,8 @@ describe('/api/transactions', () => {
           type: 'EXPENSE',
           description: 'Test',
           date: '2024-01-15T12:00:00.000Z',
-          accountId: 'other-account'
-        })
+          accountId: 'other-account',
+        }),
       })
 
       const response = await POST(request)
@@ -237,16 +266,16 @@ describe('/api/transactions', () => {
     })
 
     it('should handle income transactions correctly', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.currency.findUnique as jest.Mock).mockResolvedValue(mockCurrency)
-      ;(prisma.appAccount.findFirst as jest.Mock).mockResolvedValue(mockAccount)
-      
+      mockGetSession.mockResolvedValue(mockSession)
+      mockCurrencyFindUnique.mockResolvedValue(mockCurrency)
+      mockAppAccountFindFirst.mockResolvedValue(mockAccount)
+
       const incomeTransaction = {
         ...mockTransaction,
         type: 'INCOME',
-        description: '給与'
+        description: '給与',
       }
-      ;(prisma.transaction.create as jest.Mock).mockResolvedValue(incomeTransaction)
+      mockTransactionCreate.mockResolvedValue(incomeTransaction)
 
       const request = new NextRequest('http://localhost:3000/api/transactions', {
         method: 'POST',
@@ -257,31 +286,31 @@ describe('/api/transactions', () => {
           type: 'INCOME',
           description: '給与',
           date: '2024-01-15T12:00:00.000Z',
-          accountId: 'account-1'
-        })
+          accountId: 'account-1',
+        }),
       })
 
       const response = await POST(request)
 
       expect(response.status).toBe(200)
-      
+
       // Income should increase balance
       expect(prisma.appAccount.update).toHaveBeenCalledWith({
         where: { id: 'account-1' },
         data: {
           balance: {
-            increment: 300000 // Income should increase balance
-          }
-        }
+            increment: 300000, // Income should increase balance
+          },
+        },
       })
     })
   })
 
   describe('GET /api/transactions', () => {
     it('should fetch transactions with pagination', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([mockTransaction])
-      ;(prisma.transaction.count as jest.Mock).mockResolvedValue(1)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindMany.mockResolvedValue([mockTransaction])
+      mockTransactionCount.mockResolvedValue(1)
 
       const request = new NextRequest('http://localhost:3000/api/transactions?page=1&limit=20')
 
@@ -295,14 +324,14 @@ describe('/api/transactions', () => {
         page: 1,
         limit: 20,
         total: 1,
-        pages: 1
+        pages: 1,
       })
     })
 
     it('should filter by transaction type', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
-      ;(prisma.transaction.count as jest.Mock).mockResolvedValue(0)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindMany.mockResolvedValue([])
+      mockTransactionCount.mockResolvedValue(0)
 
       const request = new NextRequest('http://localhost:3000/api/transactions?type=EXPENSE')
 
@@ -311,23 +340,25 @@ describe('/api/transactions', () => {
       expect(prisma.transaction.findMany).toHaveBeenCalledWith({
         where: {
           userId: 'user-1',
-          type: 'EXPENSE'
+          type: 'EXPENSE',
         },
         include: expect.any(Object),
         orderBy: { date: 'desc' },
         skip: 0,
-        take: 20
+        take: 20,
       })
     })
 
     it('should filter by date range', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
-      ;(prisma.transaction.count as jest.Mock).mockResolvedValue(0)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindMany.mockResolvedValue([])
+      mockTransactionCount.mockResolvedValue(0)
 
       const startDate = '2024-01-01T00:00:00.000Z'
       const endDate = '2024-01-31T23:59:59.999Z'
-      const request = new NextRequest(`http://localhost:3000/api/transactions?startDate=${startDate}&endDate=${endDate}`)
+      const request = new NextRequest(
+        `http://localhost:3000/api/transactions?startDate=${startDate}&endDate=${endDate}`
+      )
 
       await GET(request)
 
@@ -336,20 +367,20 @@ describe('/api/transactions', () => {
           userId: 'user-1',
           date: {
             gte: new Date(startDate),
-            lte: new Date(endDate)
-          }
+            lte: new Date(endDate),
+          },
         },
         include: expect.any(Object),
         orderBy: { date: 'desc' },
         skip: 0,
-        take: 20
+        take: 20,
       })
     })
 
     it('should search by description and notes', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
-      ;(prisma.transaction.count as jest.Mock).mockResolvedValue(0)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindMany.mockResolvedValue([])
+      mockTransactionCount.mockResolvedValue(0)
 
       const request = new NextRequest('http://localhost:3000/api/transactions?search=ランチ')
 
@@ -361,43 +392,42 @@ describe('/api/transactions', () => {
           OR: [
             { description: { contains: 'ランチ', mode: 'insensitive' } },
             { notes: { contains: 'ランチ', mode: 'insensitive' } },
-            { tags: { has: 'ランチ' } }
-          ]
+            { tags: { has: 'ランチ' } },
+          ],
         },
         include: expect.any(Object),
         orderBy: { date: 'desc' },
         skip: 0,
-        take: 20
+        take: 20,
       })
     })
   })
 
   describe('PUT /api/transactions/[id]', () => {
     it('should update transaction successfully', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findFirst as jest.Mock).mockResolvedValue(mockTransaction)
-      
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindFirst.mockResolvedValue(mockTransaction)
+
       const updatedTransaction = {
         ...mockTransaction,
-        description: '新しい説明'
+        description: '新しい説明',
       }
-      
-      const mockTransactionFn = jest.fn().mockImplementation(async (callback) => {
+
+      mockPrismaTransaction.mockImplementation(async (callback: Function) => {
         return callback(prisma)
       })
-      ;(prisma.$transaction as jest.Mock).mockImplementation(mockTransactionFn)
-      ;(prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
-      ;(prisma.appAccount.update as jest.Mock).mockResolvedValue(mockAccount)
+      mockTransactionUpdate.mockResolvedValue(updatedTransaction)
+      mockAppAccountUpdate.mockResolvedValue(mockAccount)
 
       const request = new NextRequest('http://localhost:3000/api/transactions/transaction-1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          description: '新しい説明'
-        })
+          description: '新しい説明',
+        }),
       })
 
-      const response = await PUT(request, { params: { id: 'transaction-1' } })
+      const response = await PUT(request, { params: Promise.resolve({ id: 'transaction-1' }) })
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -406,18 +436,18 @@ describe('/api/transactions', () => {
     })
 
     it('should reject updating non-owned transaction', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindFirst.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/transactions/other-transaction', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          description: '新しい説明'
-        })
+          description: '新しい説明',
+        }),
       })
 
-      const response = await PUT(request, { params: { id: 'other-transaction' } })
+      const response = await PUT(request, { params: Promise.resolve({ id: 'other-transaction' }) })
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -427,47 +457,46 @@ describe('/api/transactions', () => {
 
   describe('DELETE /api/transactions/[id]', () => {
     it('should delete transaction successfully', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findFirst as jest.Mock).mockResolvedValue(mockTransaction)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindFirst.mockResolvedValue(mockTransaction)
 
-      const mockTransactionFn = jest.fn().mockImplementation(async (callback) => {
+      mockPrismaTransaction.mockImplementation(async (callback: Function) => {
         return callback(prisma)
       })
-      ;(prisma.$transaction as jest.Mock).mockImplementation(mockTransactionFn)
-      ;(prisma.transaction.delete as jest.Mock).mockResolvedValue(mockTransaction)
-      ;(prisma.appAccount.update as jest.Mock).mockResolvedValue(mockAccount)
+      mockTransactionDelete.mockResolvedValue(mockTransaction)
+      mockAppAccountUpdate.mockResolvedValue(mockAccount)
 
       const request = new NextRequest('http://localhost:3000/api/transactions/transaction-1', {
-        method: 'DELETE'
+        method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { id: 'transaction-1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ id: 'transaction-1' }) })
       const data = await response.json()
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.message).toBe('取引が削除されました')
-      
+
       // Balance should be adjusted (reverse the original transaction)
       expect(prisma.appAccount.update).toHaveBeenCalledWith({
         where: { id: 'account-1' },
         data: {
           balance: {
-            decrement: -5000 // Reverse the expense
-          }
-        }
+            decrement: -5000, // Reverse the expense
+          },
+        },
       })
     })
 
     it('should reject deleting non-owned transaction', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindFirst.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/transactions/other-transaction', {
-        method: 'DELETE'
+        method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { id: 'other-transaction' } })
+      const response = await DELETE(request, { params: Promise.resolve({ id: 'other-transaction' }) })
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -477,12 +506,12 @@ describe('/api/transactions', () => {
 
   describe('GET /api/transactions/[id]', () => {
     it('should fetch single transaction successfully', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findFirst as jest.Mock).mockResolvedValue(mockTransaction)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindFirst.mockResolvedValue(mockTransaction)
 
       const request = new NextRequest('http://localhost:3000/api/transactions/transaction-1')
 
-      const response = await GET_ID(request, { params: { id: 'transaction-1' } })
+      const response = await GET_ID(request, { params: Promise.resolve({ id: 'transaction-1' }) })
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -492,12 +521,12 @@ describe('/api/transactions', () => {
     })
 
     it('should return 404 for non-existent transaction', async () => {
-      mockAuth.api.getSession.mockResolvedValue(mockSession)
-      ;(prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(mockSession)
+      mockTransactionFindFirst.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/transactions/nonexistent')
 
-      const response = await GET_ID(request, { params: { id: 'nonexistent' } })
+      const response = await GET_ID(request, { params: Promise.resolve({ id: 'nonexistent' }) })
       const data = await response.json()
 
       expect(response.status).toBe(404)

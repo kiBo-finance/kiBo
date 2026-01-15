@@ -25,7 +25,7 @@ model User {
   baseCurrency  String    @default("JPY")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   // リレーション
   accounts             Account[]
   cards               Card[]
@@ -34,7 +34,7 @@ model User {
   categories          Category[]
   budgets             Budget[]
   notificationSettings NotificationSettings[]
-  
+
   @@map("users")
 }
 
@@ -43,7 +43,7 @@ model Session {
   userId    String
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("sessions")
 }
 
@@ -54,14 +54,14 @@ model Currency {
   name      String      // '日本円', '米ドル'
   decimals  Int         // 0 for JPY, 2 for USD
   isActive  Boolean @default(true)
-  
+
   // リレーション
   accounts         Account[]
   transactions     Transaction[]
   scheduledTx      ScheduledTransaction[]
   exchangeRatesFrom ExchangeRate[] @relation("FromCurrency")
   exchangeRatesTo   ExchangeRate[] @relation("ToCurrency")
-  
+
   @@map("currencies")
 }
 
@@ -73,11 +73,11 @@ model ExchangeRate {
   rate         Decimal  @db.Decimal(15,8)
   timestamp    DateTime @default(now())
   source       String?  // API source name
-  
+
   // リレーション
   fromCurrencyRef Currency @relation("FromCurrency", fields: [fromCurrency], references: [code])
   toCurrencyRef   Currency @relation("ToCurrency", fields: [toCurrency], references: [code])
-  
+
   @@unique([fromCurrency, toCurrency, timestamp])
   @@map("exchange_rates")
 }
@@ -94,18 +94,18 @@ model Account {
   userId      String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  
+
   // 定期預金用フィールド
   fixedDepositRate     Decimal?  @db.Decimal(5,4) // 年利率
   fixedDepositMaturity DateTime? // 満期日
-  
+
   // リレーション
   user            User         @relation(fields: [userId], references: [id])
   currencyRef     Currency     @relation(fields: [currency], references: [code])
   cards           Card[]
   transactions    Transaction[]
   scheduledTx     ScheduledTransaction[]
-  
+
   @@map("accounts")
 }
 
@@ -129,12 +129,12 @@ model Card {
   expiryDate   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   // リレーション
   user         User          @relation(fields: [userId], references: [id])
   account      Account       @relation(fields: [accountId], references: [id])
   transactions Transaction[]
-  
+
   @@map("cards")
 }
 
@@ -153,7 +153,7 @@ model Category {
   userId      String
   parentId    String? // サブカテゴリ用
   isActive    Boolean @default(true)
-  
+
   // リレーション
   user         User          @relation(fields: [userId], references: [id])
   parent       Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id])
@@ -161,7 +161,7 @@ model Category {
   transactions Transaction[]
   scheduledTx  ScheduledTransaction[]
   budgets      Budget[]
-  
+
   @@map("categories")
 }
 
@@ -177,25 +177,25 @@ model Transaction {
   cardId      String?
   categoryId  String?
   userId      String
-  
+
   // 為替関連
   exchangeRate     Decimal? @db.Decimal(15,8) // 記録時の為替レート
   baseCurrencyAmount Decimal? @db.Decimal(15,4) // 基準通貨での金額
-  
+
   // メタデータ
   attachments String[] // ファイルパス配列
   tags        String[]
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // リレーション
   user        User      @relation(fields: [userId], references: [id])
   account     Account   @relation(fields: [accountId], references: [id])
   card        Card?     @relation(fields: [cardId], references: [id])
   category    Category? @relation(fields: [categoryId], references: [id])
   currencyRef Currency  @relation(fields: [currency], references: [code])
-  
+
   @@map("transactions")
 }
 
@@ -209,32 +209,32 @@ model ScheduledTransaction {
   accountId   String
   categoryId  String?
   userId      String
-  
+
   // スケジュール設定
   dueDate     DateTime
   frequency   ScheduleFrequency?
   endDate     DateTime?
   isRecurring Boolean         @default(false)
-  
+
   // ステータス管理
   status      ScheduledStatus @default(PENDING)
   completedAt DateTime?
-  
+
   // 通知設定
   reminderDays Int @default(1) // 何日前に通知するか
   isReminderSent Boolean @default(false)
-  
+
   // メタデータ
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // リレーション
   user        User      @relation(fields: [userId], references: [id])
   account     Account   @relation(fields: [accountId], references: [id])
   category    Category? @relation(fields: [categoryId], references: [id])
   currencyRef Currency  @relation(fields: [currency], references: [code])
-  
+
   @@map("scheduled_transactions")
 }
 
@@ -269,11 +269,11 @@ model Budget {
   startDate  DateTime
   endDate    DateTime
   isActive   Boolean  @default(true)
-  
+
   // リレーション
   user     User     @relation(fields: [userId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
-  
+
   @@map("budgets")
 }
 
@@ -282,24 +282,24 @@ model NotificationSettings {
   id          String            @id @default(cuid())
   userId      String
   type        NotificationType  @default(DISABLED)
-  
+
   // Webhook設定
   webhookUrl  String?
   webhookType WebhookType?      // SLACK or DISCORD
-  
+
   // 通知対象
   scheduledTransactionReminders Boolean @default(true)
   overdueTransactions          Boolean @default(true)
   budgetAlerts                Boolean @default(true)
-  
+
   // メタデータ
   isActive    Boolean           @default(true)
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-  
+
   // リレーション
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, type])
   @@map("notification_settings")
 }
@@ -317,14 +317,14 @@ model NotificationLog {
   errorMessage    String?
   retryCount      Int                  @default(0)
   maxRetries      Int                  @default(3)
-  
+
   // 関連エンティティ
   scheduledTransactionId String?
   budgetId              String?
-  
+
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
-  
+
   @@map("notification_logs")
 }
 
@@ -368,17 +368,20 @@ NOTIFICATION_API_KEY="your-notification-api-key-for-cron-jobs"
 ### REST API Endpoints
 
 #### 認証
+
 - `POST /api/auth/sign-up` - ユーザー登録
-- `POST /api/auth/sign-in` - ログイン  
+- `POST /api/auth/sign-in` - ログイン
 - `POST /api/auth/sign-out` - ログアウト
 - `GET /api/auth/session` - セッション取得
 
 #### 通貨・為替
+
 - `GET /api/currencies` - 対応通貨一覧
 - `GET /api/exchange-rates` - 最新為替レート
 - `POST /api/exchange-rates/refresh` - レート更新
 
 #### 口座管理
+
 - `GET /api/accounts` - 口座一覧
 - `POST /api/accounts` - 口座作成
 - `PUT /api/accounts/:id` - 口座更新
@@ -386,12 +389,14 @@ NOTIFICATION_API_KEY="your-notification-api-key-for-cron-jobs"
 - `GET /api/accounts/:id/balance` - 残高取得
 
 #### カード管理
+
 - `GET /api/cards` - カード一覧
 - `POST /api/cards` - カード作成
 - `PUT /api/cards/:id` - カード更新
 - `DELETE /api/cards/:id` - カード削除
 
 #### 予定取引
+
 - `GET /api/scheduled-transactions` - 予定一覧
 - `POST /api/scheduled-transactions` - 予定作成
 - `PUT /api/scheduled-transactions/:id` - 予定更新
@@ -399,12 +404,14 @@ NOTIFICATION_API_KEY="your-notification-api-key-for-cron-jobs"
 - `POST /api/scheduled-transactions/:id/complete` - 予定完了
 
 #### 取引管理
+
 - `GET /api/transactions` - 取引履歴
 - `POST /api/transactions` - 取引作成
 - `PUT /api/transactions/:id` - 取引更新
 - `DELETE /api/transactions/:id` - 取引削除
 
 #### 通知管理 (Phase 6)
+
 - `GET /api/notifications/settings` - 通知設定取得
 - `POST /api/notifications/settings` - 通知設定作成・更新
 - `DELETE /api/notifications/settings/:id` - 通知設定削除
@@ -471,40 +478,39 @@ export const totalAssetsAtom = atom((get) => {
   const accounts = get(accountsAtom)
   const rates = get(exchangeRatesAtom)
   const baseCurrency = get(baseCurrencyAtom)
-  
+
   return accounts.reduce((total, account) => {
     if (account.currency === baseCurrency) {
       return total + Number(account.balance)
     }
-    
-    const rate = rates.find(r => 
-      r.fromCurrency === account.currency && 
-      r.toCurrency === baseCurrency
-    )?.rate || 1
-    
-    return total + (Number(account.balance) * Number(rate))
+
+    const rate =
+      rates.find((r) => r.fromCurrency === account.currency && r.toCurrency === baseCurrency)
+        ?.rate || 1
+
+    return total + Number(account.balance) * Number(rate)
   }, 0)
 })
 
 export const overdueTransactionsAtom = atom((get) => {
   const scheduled = get(scheduledTransactionsAtom)
   const now = new Date()
-  
-  return scheduled.filter(tx => 
-    tx.status === 'PENDING' && 
-    new Date(tx.dueDate) < now
-  )
+
+  return scheduled.filter((tx) => tx.status === 'PENDING' && new Date(tx.dueDate) < now)
 })
 
 export const accountsByCurrencyAtom = atom((get) => {
   const accounts = get(accountsAtom)
-  return accounts.reduce((acc, account) => {
-    if (!acc[account.currency]) {
-      acc[account.currency] = []
-    }
-    acc[account.currency].push(account)
-    return acc
-  }, {} as Record<string, Account[]>)
+  return accounts.reduce(
+    (acc, account) => {
+      if (!acc[account.currency]) {
+        acc[account.currency] = []
+      }
+      acc[account.currency].push(account)
+      return acc
+    },
+    {} as Record<string, Account[]>
+  )
 })
 ```
 
@@ -517,29 +523,35 @@ export function useAccounts() {
   const [loading, setLoading] = useAtom(
     focusAtom(loadingStatesAtom, (optic) => optic.prop('accounts'))
   )
-  
-  const createAccount = useCallback(async (data: CreateAccountData) => {
-    setLoading(true)
-    try {
-      const newAccount = await createAccountAction(data)
-      setAccounts(prev => [...prev, newAccount])
-      return newAccount
-    } finally {
-      setLoading(false)
-    }
-  }, [setAccounts, setLoading])
-  
-  const updateAccount = useCallback(async (id: string, data: UpdateAccountData) => {
-    setLoading(true)
-    try {
-      const updated = await updateAccountAction(id, data)
-      setAccounts(prev => prev.map(acc => acc.id === id ? updated : acc))
-      return updated
-    } finally {
-      setLoading(false)
-    }
-  }, [setAccounts, setLoading])
-  
+
+  const createAccount = useCallback(
+    async (data: CreateAccountData) => {
+      setLoading(true)
+      try {
+        const newAccount = await createAccountAction(data)
+        setAccounts((prev) => [...prev, newAccount])
+        return newAccount
+      } finally {
+        setLoading(false)
+      }
+    },
+    [setAccounts, setLoading]
+  )
+
+  const updateAccount = useCallback(
+    async (id: string, data: UpdateAccountData) => {
+      setLoading(true)
+      try {
+        const updated = await updateAccountAction(id, data)
+        setAccounts((prev) => prev.map((acc) => (acc.id === id ? updated : acc)))
+        return updated
+      } finally {
+        setLoading(false)
+      }
+    },
+    [setAccounts, setLoading]
+  )
+
   return {
     accounts,
     loading,
@@ -552,25 +564,27 @@ export function useAccounts() {
 export function useCurrency() {
   const [baseCurrency] = useAtom(baseCurrencyAtom)
   const [exchangeRates] = useAtom(exchangeRatesAtom)
-  
-  const convertToBase = useCallback((amount: number, fromCurrency: string) => {
-    if (fromCurrency === baseCurrency) return amount
-    
-    const rate = exchangeRates.find(r => 
-      r.fromCurrency === fromCurrency && 
-      r.toCurrency === baseCurrency
-    )?.rate
-    
-    return rate ? amount * Number(rate) : amount
-  }, [baseCurrency, exchangeRates])
-  
+
+  const convertToBase = useCallback(
+    (amount: number, fromCurrency: string) => {
+      if (fromCurrency === baseCurrency) return amount
+
+      const rate = exchangeRates.find(
+        (r) => r.fromCurrency === fromCurrency && r.toCurrency === baseCurrency
+      )?.rate
+
+      return rate ? amount * Number(rate) : amount
+    },
+    [baseCurrency, exchangeRates]
+  )
+
   const formatCurrency = useCallback((amount: number, currency: string) => {
     return new Intl.NumberFormat('ja-JP', {
       style: 'currency',
       currency: currency,
     }).format(amount)
   }, [])
-  
+
   return {
     baseCurrency,
     convertToBase,
@@ -589,47 +603,47 @@ import { Decimal } from 'decimal.js'
 
 export class ExchangeRateService {
   private static readonly API_URL = 'https://api.exchangerate-api.com/v4/latest'
-  
+
   static async fetchRates(baseCurrency: string = 'JPY'): Promise<ExchangeRate[]> {
     try {
       const response = await fetch(`${this.API_URL}/${baseCurrency}`, {
-        next: { revalidate: 3600 } // 1時間キャッシュ
+        next: { revalidate: 3600 }, // 1時間キャッシュ
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch exchange rates')
       }
-      
+
       const data = await response.json()
-      
+
       return Object.entries(data.rates).map(([currency, rate]) => ({
         id: `${baseCurrency}-${currency}-${Date.now()}`,
         fromCurrency: baseCurrency,
         toCurrency: currency,
         rate: new Decimal(rate as number),
         timestamp: new Date(),
-        source: 'exchangerate-api'
+        source: 'exchangerate-api',
       }))
     } catch (error) {
       console.error('Exchange rate fetch error:', error)
       throw error
     }
   }
-  
+
   static async updateRatesInDB(): Promise<void> {
     const rates = await this.fetchRates()
-    
+
     for (const rate of rates) {
       await prisma.exchangeRate.upsert({
         where: {
           fromCurrency_toCurrency_timestamp: {
             fromCurrency: rate.fromCurrency,
             toCurrency: rate.toCurrency,
-            timestamp: rate.timestamp
-          }
+            timestamp: rate.timestamp,
+          },
         },
         update: { rate: rate.rate },
-        create: rate
+        create: rate,
       })
     }
   }
@@ -656,49 +670,46 @@ const createAccountSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
-      headers: request.headers
+      headers: request.headers,
     })
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
     const accounts = await prisma.account.findMany({
       where: { userId: session.user.id },
       include: { currencyRef: true },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     })
-    
+
     return NextResponse.json(accounts)
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch accounts' }, 
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch accounts' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
-      headers: request.headers
+      headers: request.headers,
     })
-    
+
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
     const body = await request.json()
     const validatedData = createAccountSchema.parse(body)
-    
+
     const account = await prisma.account.create({
       data: {
         ...validatedData,
         userId: session.user.id,
       },
-      include: { currencyRef: true }
+      include: { currencyRef: true },
     })
-    
+
     return NextResponse.json(account, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -707,11 +718,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    
-    return NextResponse.json(
-      { error: 'Failed to create account' },
-      { status: 500 }
-    )
+
+    return NextResponse.json({ error: 'Failed to create account' }, { status: 500 })
   }
 }
 ```
@@ -725,11 +733,13 @@ kiBoアプリの通知システムは、予定取引のリマインダーや期�
 ### 機能仕様
 
 #### 1. 通知タイプ
+
 - **予定取引リマインダー**: 設定した日数前に予定取引を通知
 - **期限切れ通知**: 期限を過ぎた予定取引の通知
 - **予算アラート**: 予算超過警告（将来実装予定）
 
 #### 2. 配信方法
+
 - **Slack Webhook**: Slack Incoming Webhookを使用
 - **Discord Webhook**: Discord Webhook URLを使用
 - **メール通知**: 将来実装予定
@@ -744,23 +754,23 @@ model NotificationSettings {
   id          String            @id @default(cuid())
   userId      String
   type        NotificationType  @default(DISABLED) // DISABLED, WEBHOOK, EMAIL
-  
+
   // Webhook設定
   webhookUrl  String?
   webhookType WebhookType?      // SLACK or DISCORD
-  
+
   // 通知対象
   scheduledTransactionReminders Boolean @default(true)
   overdueTransactions          Boolean @default(true)
   budgetAlerts                Boolean @default(true)
-  
+
   // メタデータ
   isActive    Boolean           @default(true)
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-  
+
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, type])
 }
 
@@ -778,11 +788,11 @@ model NotificationLog {
   errorMessage    String?
   retryCount      Int                  @default(0)
   maxRetries      Int                  @default(3)
-  
+
   // 関連エンティティ
   scheduledTransactionId String?
   budgetId              String?
-  
+
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 }
@@ -794,15 +804,21 @@ model NotificationLog {
 // WebhookNotificationService
 export class WebhookNotificationService {
   // Slack通知送信
-  static async sendSlackNotification(webhookUrl: string, payload: NotificationPayload): Promise<boolean>
-  
+  static async sendSlackNotification(
+    webhookUrl: string,
+    payload: NotificationPayload
+  ): Promise<boolean>
+
   // Discord通知送信
-  static async sendDiscordNotification(webhookUrl: string, payload: NotificationPayload): Promise<boolean>
-  
+  static async sendDiscordNotification(
+    webhookUrl: string,
+    payload: NotificationPayload
+  ): Promise<boolean>
+
   // 汎用Webhook送信
   static async sendWebhookNotification(
-    webhookUrl: string, 
-    webhookType: WebhookType, 
+    webhookUrl: string,
+    webhookType: WebhookType,
     payload: NotificationPayload
   ): Promise<boolean>
 }
@@ -811,13 +827,13 @@ export class WebhookNotificationService {
 export class ReminderService {
   // 送信待ちリマインダー取得
   static async getPendingReminders(): Promise<ScheduledTransaction[]>
-  
+
   // 期限切れ取引取得
   static async getOverdueTransactions(): Promise<ScheduledTransaction[]>
-  
+
   // リマインダー送信処理
   static async sendReminders(): Promise<void>
-  
+
   // 全通知処理実行
   static async processAllNotifications(): Promise<void>
 }
@@ -837,7 +853,7 @@ export async function GET() {
 
   const settings = await prisma.notificationSettings.findMany({
     where: { userId: session.user.id },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
   })
 
   return NextResponse.json(settings)
@@ -851,19 +867,16 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  
+
   // Webhook URL形式バリデーション
   if (body.type === 'WEBHOOK' && body.webhookUrl) {
     const isValidWebhookUrl = await WebhookNotificationService.validateWebhookUrl(
-      body.webhookUrl, 
+      body.webhookUrl,
       body.webhookType
     )
-    
+
     if (!isValidWebhookUrl) {
-      return NextResponse.json(
-        { error: 'Invalid webhook URL format' }, 
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid webhook URL format' }, { status: 400 })
     }
   }
 
@@ -872,14 +885,14 @@ export async function POST(request: Request) {
     where: {
       userId_type: {
         userId: session.user.id,
-        type: body.type
-      }
+        type: body.type,
+      },
     },
     create: {
       userId: session.user.id,
-      ...body
+      ...body,
     },
-    update: body
+    update: body,
   })
 
   return NextResponse.json(settings, { status: 201 })
@@ -894,7 +907,7 @@ export async function POST(request: Request) {
   // API Key または セッション認証
   const authHeader = request.headers.get('authorization')
   const apiKey = authHeader?.replace('Bearer ', '')
-  
+
   if (apiKey) {
     // Cron job からのAPI Key認証
     if (apiKey !== process.env.NOTIFICATION_API_KEY) {
@@ -910,16 +923,13 @@ export async function POST(request: Request) {
 
   try {
     await ReminderService.processAllNotifications()
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Notifications processed successfully' 
+    return NextResponse.json({
+      success: true,
+      message: 'Notifications processed successfully',
     })
   } catch (error) {
     console.error('Failed to process notifications:', error)
-    return NextResponse.json(
-      { error: 'Failed to process notifications' }, 
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to process notifications' }, { status: 500 })
   }
 }
 ```
@@ -933,12 +943,12 @@ export async function POST(request: Request) {
 export function NotificationSettings() {
   const [settings, setSettings] = useState<NotificationSettings[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  
+
   // 設定取得
   useEffect(() => {
     fetchSettings()
   }, [])
-  
+
   const fetchSettings = async () => {
     const response = await fetch('/api/notifications/settings')
     if (response.ok) {
@@ -946,7 +956,7 @@ export function NotificationSettings() {
       setSettings(data)
     }
   }
-  
+
   // Webhook設定保存
   const handleSaveWebhook = async (data: WebhookData) => {
     setIsLoading(true)
@@ -963,7 +973,7 @@ export function NotificationSettings() {
           budgetAlerts: data.budgets
         })
       })
-      
+
       if (response.ok) {
         toast.success('Webhook設定を保存しました')
         fetchSettings()
@@ -977,7 +987,7 @@ export function NotificationSettings() {
       setIsLoading(false)
     }
   }
-  
+
   // テスト送信
   const handleTestWebhook = async (webhookUrl: string, webhookType: WebhookType) => {
     try {
@@ -986,7 +996,7 @@ export function NotificationSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ webhookUrl, webhookType })
       })
-      
+
       if (response.ok) {
         toast.success('テスト通知を送信しました')
       } else {
@@ -996,7 +1006,7 @@ export function NotificationSettings() {
       toast.error('テスト送信に失敗しました')
     }
   }
-  
+
   return (
     <Card>
       <CardHeader>
@@ -1010,14 +1020,14 @@ export function NotificationSettings() {
       </CardHeader>
       <CardContent>
         {/* Webhook設定UI */}
-        <WebhookConfigForm 
+        <WebhookConfigForm
           onSave={handleSaveWebhook}
           onTest={handleTestWebhook}
           isLoading={isLoading}
         />
-        
+
         {/* 設定済みWebhook一覧 */}
-        <WebhookList 
+        <WebhookList
           settings={settings}
           onDelete={handleDeleteWebhook}
           onToggle={handleToggleWebhook}
@@ -1035,6 +1045,7 @@ export function NotificationSettings() {
 #### プラットフォーム別設定例
 
 **Vercel:**
+
 ```json
 // vercel.json
 {
@@ -1048,10 +1059,12 @@ export function NotificationSettings() {
 ```
 
 **外部Cronサービス:**
+
 - EasyCron, cron-job.org などの外部サービスを利用
 - Webhook形式でAPIエンドポイントを定期実行
 
 **自前サーバー:**
+
 ```bash
 # crontab設定
 0 9 * * * curl -X POST -H "Authorization: Bearer $API_KEY" https://your-domain.com/api/notifications/send-reminders
@@ -1063,7 +1076,7 @@ export function NotificationSettings() {
 # ローカル開発環境での手動実行
 curl -X POST http://localhost:3001/api/notifications/send-reminders \
   -H "Authorization: Bearer your-notification-api-key"
-  
+
 # 本番環境での手動実行
 curl -X POST https://your-domain.com/api/notifications/send-reminders \
   -H "Authorization: Bearer production-api-key"
@@ -1078,47 +1091,52 @@ curl -X POST https://your-domain.com/api/notifications/send-reminders \
 describe('Notification API', () => {
   describe('POST /api/notifications/settings', () => {
     it('should create webhook settings successfully', async () => {
-      const response = await POST(mockRequest({
-        type: 'WEBHOOK',
-        webhookType: 'SLACK',
-        webhookUrl: 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX',
-        scheduledTransactionReminders: true,
-        overdueTransactions: true,
-        budgetAlerts: false
-      }))
-      
+      const response = await POST(
+        mockRequest({
+          type: 'WEBHOOK',
+          webhookType: 'SLACK',
+          webhookUrl:
+            'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX',
+          scheduledTransactionReminders: true,
+          overdueTransactions: true,
+          budgetAlerts: false,
+        })
+      )
+
       expect(response.status).toBe(201)
       const data = await response.json()
       expect(data.type).toBe('WEBHOOK')
       expect(data.webhookType).toBe('SLACK')
     })
-    
+
     it('should validate webhook URL format', async () => {
-      const response = await POST(mockRequest({
-        type: 'WEBHOOK',
-        webhookType: 'SLACK',
-        webhookUrl: 'invalid-url',
-        scheduledTransactionReminders: true
-      }))
-      
+      const response = await POST(
+        mockRequest({
+          type: 'WEBHOOK',
+          webhookType: 'SLACK',
+          webhookUrl: 'invalid-url',
+          scheduledTransactionReminders: true,
+        })
+      )
+
       expect(response.status).toBe(400)
       const data = await response.json()
       expect(data.error).toBe('Invalid webhook URL format')
     })
   })
-  
+
   describe('POST /api/notifications/send-reminders', () => {
     it('should process reminders with valid API key', async () => {
       const response = await POST(mockRequestWithAuth('valid-api-key'))
-      
+
       expect(response.status).toBe(200)
       const data = await response.json()
       expect(data.success).toBe(true)
     })
-    
+
     it('should reject invalid API key', async () => {
       const response = await POST(mockRequestWithAuth('invalid-key'))
-      
+
       expect(response.status).toBe(401)
     })
   })

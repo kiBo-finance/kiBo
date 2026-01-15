@@ -1,11 +1,15 @@
-import { jest, describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals'
-import { prisma } from '@/lib/db'
-import { Decimal } from 'decimal.js'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test'
+import { prisma } from '~/lib/db'
+import type { User, AppAccount, Category, Card } from '@prisma/client'
 
-describe('Card Database Schema Tests', () => {
-  let testUser: any
-  let testAccount: any
-  let testCategory: any
+// Skip these tests if database is not available
+const describeIfDb =
+  process.env.DATABASE_URL && process.env.RUN_DB_TESTS ? describe : describe.skip
+
+describeIfDb('Card Database Schema Tests', () => {
+  let testUser: User
+  let testAccount: AppAccount
+  let testCategory: Category
 
   beforeAll(async () => {
     testUser = await prisma.user.create({
@@ -13,8 +17,8 @@ describe('Card Database Schema Tests', () => {
         id: 'schema-test-user',
         email: 'schema-test@example.com',
         name: 'Schema Test User',
-        emailVerified: false
-      }
+        emailVerified: false,
+      },
     })
 
     testAccount = await prisma.appAccount.create({
@@ -23,8 +27,8 @@ describe('Card Database Schema Tests', () => {
         name: 'Schema Test Account',
         type: 'CHECKING',
         currency: 'JPY',
-        balance: '1000000'
-      }
+        balance: '1000000',
+      },
     })
 
     testCategory = await prisma.category.create({
@@ -32,8 +36,8 @@ describe('Card Database Schema Tests', () => {
         userId: testUser.id,
         name: 'Test Category',
         type: 'EXPENSE',
-        color: '#FF0000'
-      }
+        color: '#FF0000',
+      },
     })
   })
 
@@ -64,8 +68,8 @@ describe('Card Database Schema Tests', () => {
           creditLimit: '500000',
           billingDate: 15,
           paymentDate: 10,
-          isActive: true
-        }
+          isActive: true,
+        },
       })
 
       expect(creditCard.id).toBeDefined()
@@ -87,8 +91,8 @@ describe('Card Database Schema Tests', () => {
           name: 'Linked Account',
           type: 'SAVINGS',
           currency: 'JPY',
-          balance: '500000'
-        }
+          balance: '500000',
+        },
       })
 
       const debitCard = await prisma.card.create({
@@ -102,8 +106,8 @@ describe('Card Database Schema Tests', () => {
           autoTransferEnabled: true,
           linkedAccountId: linkedAccount.id,
           minBalance: '10000',
-          isActive: true
-        }
+          isActive: true,
+        },
       })
 
       expect(debitCard.type).toBe('DEBIT')
@@ -125,8 +129,8 @@ describe('Card Database Schema Tests', () => {
           type: 'PREPAID',
           lastFourDigits: '9012',
           balance: '50000',
-          isActive: true
-        }
+          isActive: true,
+        },
       })
 
       expect(prepaidCard.type).toBe('PREPAID')
@@ -146,8 +150,8 @@ describe('Card Database Schema Tests', () => {
           lastFourDigits: '3456',
           monthlyLimit: '100000',
           settlementDay: 25,
-          isActive: true
-        }
+          isActive: true,
+        },
       })
 
       expect(postpayCard.type).toBe('POSTPAY')
@@ -165,8 +169,8 @@ describe('Card Database Schema Tests', () => {
             accountId: testAccount.id,
             name: 'Invalid User Card',
             type: 'CREDIT',
-            lastFourDigits: '0000'
-          }
+            lastFourDigits: '0000',
+          },
         })
       ).rejects.toThrow()
 
@@ -177,8 +181,8 @@ describe('Card Database Schema Tests', () => {
             accountId: 'non-existent-account',
             name: 'Invalid Account Card',
             type: 'CREDIT',
-            lastFourDigits: '0000'
-          }
+            lastFourDigits: '0000',
+          },
         })
       ).rejects.toThrow()
     })
@@ -192,15 +196,15 @@ describe('Card Database Schema Tests', () => {
           type: 'CREDIT',
           lastFourDigits: '7777',
           creditLimit: '123456.78',
-          isActive: true
-        }
+          isActive: true,
+        },
       })
 
       expect(card.creditLimit).toBe('123456.78')
 
       const updatedCard = await prisma.card.update({
         where: { id: card.id },
-        data: { creditLimit: '999999.99' }
+        data: { creditLimit: '999999.99' },
       })
 
       expect(updatedCard.creditLimit).toBe('999999.99')
@@ -212,8 +216,8 @@ describe('Card Database Schema Tests', () => {
           id: 'temp-user-for-cascade',
           email: 'temp@example.com',
           name: 'Temp User',
-          emailVerified: false
-        }
+          emailVerified: false,
+        },
       })
 
       const tempAccount = await prisma.appAccount.create({
@@ -222,8 +226,8 @@ describe('Card Database Schema Tests', () => {
           name: 'Temp Account',
           type: 'CHECKING',
           currency: 'JPY',
-          balance: '100000'
-        }
+          balance: '100000',
+        },
       })
 
       const card = await prisma.card.create({
@@ -232,22 +236,22 @@ describe('Card Database Schema Tests', () => {
           accountId: tempAccount.id,
           name: 'Card to be cascaded',
           type: 'CREDIT',
-          lastFourDigits: '8888'
-        }
+          lastFourDigits: '8888',
+        },
       })
 
       await prisma.appAccount.delete({ where: { id: tempAccount.id } })
       await prisma.user.delete({ where: { id: tempUser.id } })
 
       const deletedCard = await prisma.card.findUnique({
-        where: { id: card.id }
+        where: { id: card.id },
       })
       expect(deletedCard).toBeNull()
     })
   })
 
   describe('Transaction Model with Card Relations', () => {
-    let testCard: any
+    let testCard: Card
 
     beforeEach(async () => {
       testCard = await prisma.card.create({
@@ -258,8 +262,8 @@ describe('Card Database Schema Tests', () => {
           type: 'CREDIT',
           lastFourDigits: '1111',
           creditLimit: '500000',
-          isActive: true
-        }
+          isActive: true,
+        },
       })
     })
 
@@ -274,8 +278,8 @@ describe('Card Database Schema Tests', () => {
           currency: 'JPY',
           description: 'Card payment transaction',
           date: new Date(),
-          categoryId: testCategory.id
-        }
+          categoryId: testCategory.id,
+        },
       })
 
       expect(transaction.cardId).toBe(testCard.id)
@@ -286,8 +290,8 @@ describe('Card Database Schema Tests', () => {
       const cardWithTransactions = await prisma.card.findUnique({
         where: { id: testCard.id },
         include: {
-          transactions: true
-        }
+          transactions: true,
+        },
       })
 
       expect(cardWithTransactions?.transactions).toHaveLength(1)
@@ -303,8 +307,8 @@ describe('Card Database Schema Tests', () => {
           amount: '50000',
           currency: 'JPY',
           description: 'Non-card transaction',
-          date: new Date()
-        }
+          date: new Date(),
+        },
       })
 
       expect(transaction.cardId).toBeNull()
@@ -322,7 +326,7 @@ describe('Card Database Schema Tests', () => {
             amount: '1000',
             currency: 'JPY',
             description: 'Transaction 1',
-            date: new Date()
+            date: new Date(),
           },
           {
             userId: testUser.id,
@@ -332,7 +336,7 @@ describe('Card Database Schema Tests', () => {
             amount: '2000',
             currency: 'JPY',
             description: 'Transaction 2',
-            date: new Date()
+            date: new Date(),
           },
           {
             userId: testUser.id,
@@ -341,18 +345,18 @@ describe('Card Database Schema Tests', () => {
             amount: '3000',
             currency: 'JPY',
             description: 'Non-card transaction',
-            date: new Date()
-          }
-        ]
+            date: new Date(),
+          },
+        ],
       })
 
       const cardWithCount = await prisma.card.findUnique({
         where: { id: testCard.id },
         include: {
           _count: {
-            select: { transactions: true }
-          }
-        }
+            select: { transactions: true },
+          },
+        },
       })
 
       expect(cardWithCount?._count.transactions).toBe(2)
@@ -360,8 +364,8 @@ describe('Card Database Schema Tests', () => {
   })
 
   describe('AutoTransfer Model Schema', () => {
-    let testCard: any
-    let linkedAccount: any
+    let testCard: Card
+    let linkedAccount: AppAccount
 
     beforeEach(async () => {
       linkedAccount = await prisma.appAccount.create({
@@ -370,8 +374,8 @@ describe('Card Database Schema Tests', () => {
           name: 'Linked Transfer Account',
           type: 'SAVINGS',
           currency: 'JPY',
-          balance: '500000'
-        }
+          balance: '500000',
+        },
       })
 
       testCard = await prisma.card.create({
@@ -385,8 +389,8 @@ describe('Card Database Schema Tests', () => {
           autoTransferEnabled: true,
           linkedAccountId: linkedAccount.id,
           minBalance: '5000',
-          isActive: true
-        }
+          isActive: true,
+        },
       })
     })
 
@@ -405,10 +409,9 @@ describe('Card Database Schema Tests', () => {
           amount: '20000',
           currency: 'JPY',
           status: 'COMPLETED',
-          triggeredBy: 'PAYMENT',
-          triggeredAt: new Date(),
-          completedAt: new Date()
-        }
+          reason: 'PAYMENT',
+          userId: testUser.id,
+        },
       })
 
       expect(autoTransfer.cardId).toBe(testCard.id)
@@ -417,7 +420,7 @@ describe('Card Database Schema Tests', () => {
       expect(autoTransfer.amount).toBe('20000')
       expect(autoTransfer.currency).toBe('JPY')
       expect(autoTransfer.status).toBe('COMPLETED')
-      expect(autoTransfer.triggeredBy).toBe('PAYMENT')
+      expect(autoTransfer.reason).toBe('PAYMENT')
     })
 
     it('should link auto transfers to card correctly', async () => {
@@ -430,9 +433,8 @@ describe('Card Database Schema Tests', () => {
             amount: '10000',
             currency: 'JPY',
             status: 'COMPLETED',
-            triggeredBy: 'PAYMENT',
-            triggeredAt: new Date(),
-            completedAt: new Date()
+            reason: 'PAYMENT',
+            userId: testUser.id,
           },
           {
             cardId: testCard.id,
@@ -441,23 +443,22 @@ describe('Card Database Schema Tests', () => {
             amount: '15000',
             currency: 'JPY',
             status: 'COMPLETED',
-            triggeredBy: 'LOW_BALANCE',
-            triggeredAt: new Date(),
-            completedAt: new Date()
-          }
-        ]
+            reason: 'LOW_BALANCE',
+            userId: testUser.id,
+          },
+        ],
       })
 
       const cardWithTransfers = await prisma.card.findUnique({
         where: { id: testCard.id },
         include: {
-          autoTransfers: true
-        }
+          autoTransfers: true,
+        },
       })
 
       expect(cardWithTransfers?.autoTransfers).toHaveLength(2)
-      expect(cardWithTransfers?.autoTransfers.map(t => t.triggeredBy)).toContain('PAYMENT')
-      expect(cardWithTransfers?.autoTransfers.map(t => t.triggeredBy)).toContain('LOW_BALANCE')
+      expect(cardWithTransfers?.autoTransfers.map((t) => t.reason)).toContain('PAYMENT')
+      expect(cardWithTransfers?.autoTransfers.map((t) => t.reason)).toContain('LOW_BALANCE')
     })
 
     it('should handle auto transfer status transitions', async () => {
@@ -469,24 +470,21 @@ describe('Card Database Schema Tests', () => {
           amount: '25000',
           currency: 'JPY',
           status: 'PENDING',
-          triggeredBy: 'PAYMENT',
-          triggeredAt: new Date()
-        }
+          reason: 'PAYMENT',
+          userId: testUser.id,
+        },
       })
 
       expect(autoTransfer.status).toBe('PENDING')
-      expect(autoTransfer.completedAt).toBeNull()
 
       const updatedTransfer = await prisma.autoTransfer.update({
         where: { id: autoTransfer.id },
         data: {
           status: 'COMPLETED',
-          completedAt: new Date()
-        }
+        },
       })
 
       expect(updatedTransfer.status).toBe('COMPLETED')
-      expect(updatedTransfer.completedAt).not.toBeNull()
     })
 
     it('should enforce foreign key constraints for auto transfers', async () => {
@@ -499,16 +497,16 @@ describe('Card Database Schema Tests', () => {
             amount: '10000',
             currency: 'JPY',
             status: 'PENDING',
-            triggeredBy: 'PAYMENT',
-            triggeredAt: new Date()
-          }
+            reason: 'PAYMENT',
+            userId: testUser.id,
+          },
         })
       ).rejects.toThrow()
     })
   })
 
   describe('Card Relationships and Includes', () => {
-    let testCard: any
+    let testCard: Card
 
     beforeEach(async () => {
       testCard = await prisma.card.create({
@@ -519,8 +517,8 @@ describe('Card Database Schema Tests', () => {
           type: 'CREDIT',
           lastFourDigits: '3333',
           creditLimit: '300000',
-          isActive: true
-        }
+          isActive: true,
+        },
       })
     })
 
@@ -535,8 +533,8 @@ describe('Card Database Schema Tests', () => {
           currency: 'JPY',
           description: 'Test transaction',
           date: new Date(),
-          categoryId: testCategory.id
-        }
+          categoryId: testCategory.id,
+        },
       })
 
       const cardWithAllRelations = await prisma.card.findUnique({
@@ -546,14 +544,14 @@ describe('Card Database Schema Tests', () => {
           linkedAccount: true,
           transactions: {
             include: {
-              category: true
-            }
+              category: true,
+            },
           },
           autoTransfers: true,
           _count: {
-            select: { transactions: true }
-          }
-        }
+            select: { transactions: true },
+          },
+        },
       })
 
       expect(cardWithAllRelations?.account.name).toBe('Schema Test Account')
@@ -572,22 +570,22 @@ describe('Card Database Schema Tests', () => {
           type: 'DEBIT',
           lastFourDigits: '4444',
           balance: '50000',
-          isActive: false
-        }
+          isActive: false,
+        },
       })
 
       const activeCards = await prisma.card.findMany({
         where: {
           userId: testUser.id,
-          isActive: true
-        }
+          isActive: true,
+        },
       })
 
       const inactiveCards = await prisma.card.findMany({
         where: {
           userId: testUser.id,
-          isActive: false
-        }
+          isActive: false,
+        },
       })
 
       expect(activeCards).toHaveLength(1)

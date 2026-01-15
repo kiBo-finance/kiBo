@@ -1,36 +1,50 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals'
-import { CardService } from '@/lib/services/card-service'
-import { prisma } from '@/lib/db'
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn, type Mock } from 'bun:test'
+import type { CardType } from '@prisma/client'
 import { Decimal } from 'decimal.js'
-import { CardType } from '@prisma/client'
 
-// Prismaのモック
-jest.mock('@/lib/db', () => ({
+// Create mock functions
+const mockCardCreate = mock(() => Promise.resolve({}))
+const mockCardFindFirst = mock(() => Promise.resolve(null))
+const mockCardFindUnique = mock(() => Promise.resolve(null))
+const mockCardUpdate = mock(() => Promise.resolve({}))
+const mockCardFindMany = mock(() => Promise.resolve([]))
+const mockAppAccountFindFirst = mock(() => Promise.resolve(null))
+const mockAppAccountFindUnique = mock(() => Promise.resolve(null))
+const mockAppAccountUpdate = mock(() => Promise.resolve({}))
+const mockTransactionCreate = mock(() => Promise.resolve({}))
+const mockTransactionAggregate = mock(() => Promise.resolve({ _sum: { amount: null } }))
+const mockAutoTransferCreate = mock(() => Promise.resolve({}))
+const mockPrismaTransaction = mock((callback: Function) => callback({}))
+
+// Mock prisma module
+mock.module('~/lib/db', () => ({
   prisma: {
     card: {
-      create: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      findMany: jest.fn(),
+      create: mockCardCreate,
+      findFirst: mockCardFindFirst,
+      findUnique: mockCardFindUnique,
+      update: mockCardUpdate,
+      findMany: mockCardFindMany,
     },
     appAccount: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
+      findFirst: mockAppAccountFindFirst,
+      findUnique: mockAppAccountFindUnique,
+      update: mockAppAccountUpdate,
     },
     transaction: {
-      create: jest.fn(),
-      aggregate: jest.fn(),
+      create: mockTransactionCreate,
+      aggregate: mockTransactionAggregate,
     },
     autoTransfer: {
-      create: jest.fn(),
+      create: mockAutoTransferCreate,
     },
-    $transaction: jest.fn(),
+    $transaction: mockPrismaTransaction,
   },
 }))
 
-const mockPrisma = prisma as jest.Mocked<typeof prisma>
+// Import after mocking
+import { CardService } from '~/lib/services/card-service'
+import { prisma } from '~/lib/db'
 
 describe('CardService', () => {
   const mockUserId = 'user-123'
@@ -38,11 +52,19 @@ describe('CardService', () => {
   const mockLinkedAccountId = 'linked-account-123'
 
   beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  afterEach(() => {
-    jest.restoreAllMocks()
+    // Reset all mocks
+    mockCardCreate.mockReset()
+    mockCardFindFirst.mockReset()
+    mockCardFindUnique.mockReset()
+    mockCardUpdate.mockReset()
+    mockCardFindMany.mockReset()
+    mockAppAccountFindFirst.mockReset()
+    mockAppAccountFindUnique.mockReset()
+    mockAppAccountUpdate.mockReset()
+    mockTransactionCreate.mockReset()
+    mockTransactionAggregate.mockReset()
+    mockAutoTransferCreate.mockReset()
+    mockPrismaTransaction.mockReset()
   })
 
   describe('createCard', () => {
@@ -66,8 +88,8 @@ describe('CardService', () => {
         linkedAccount: null,
       }
 
-      mockPrisma.appAccount.findFirst.mockResolvedValue(mockAccount as any)
-      mockPrisma.card.create.mockResolvedValue(mockCard as any)
+      mockAppAccountFindFirst.mockResolvedValue(mockAccount)
+      mockCardCreate.mockResolvedValue(mockCard)
 
       const input = {
         name: 'Test Credit Card',
@@ -81,11 +103,11 @@ describe('CardService', () => {
 
       const result = await CardService.createCard(mockUserId, input)
 
-      expect(mockPrisma.appAccount.findFirst).toHaveBeenCalledWith({
+      expect(mockAppAccountFindFirst).toHaveBeenCalledWith({
         where: { id: mockAccountId, userId: mockUserId },
       })
 
-      expect(mockPrisma.card.create).toHaveBeenCalledWith({
+      expect(mockCardCreate).toHaveBeenCalledWith({
         data: {
           name: 'Test Credit Card',
           type: 'CREDIT',
@@ -141,10 +163,10 @@ describe('CardService', () => {
         linkedAccount: mockLinkedAccount,
       }
 
-      mockPrisma.appAccount.findFirst
-        .mockResolvedValueOnce(mockAccount as any)
-        .mockResolvedValueOnce(mockLinkedAccount as any)
-      mockPrisma.card.create.mockResolvedValue(mockCard as any)
+      mockAppAccountFindFirst
+        .mockResolvedValueOnce(mockAccount)
+        .mockResolvedValueOnce(mockLinkedAccount)
+      mockCardCreate.mockResolvedValue(mockCard)
 
       const input = {
         name: 'Test Debit Card',
@@ -158,12 +180,12 @@ describe('CardService', () => {
 
       const result = await CardService.createCard(mockUserId, input)
 
-      expect(mockPrisma.appAccount.findFirst).toHaveBeenCalledTimes(2)
+      expect(mockAppAccountFindFirst).toHaveBeenCalledTimes(2)
       expect(result).toEqual(mockCard)
     })
 
     it('should throw error if account not found', async () => {
-      mockPrisma.appAccount.findFirst.mockResolvedValue(null)
+      mockAppAccountFindFirst.mockResolvedValue(null)
 
       const input = {
         name: 'Test Card',
@@ -181,8 +203,8 @@ describe('CardService', () => {
         userId: mockUserId,
       }
 
-      mockPrisma.appAccount.findFirst
-        .mockResolvedValueOnce(mockAccount as any)
+      mockAppAccountFindFirst
+        .mockResolvedValueOnce(mockAccount)
         .mockResolvedValueOnce(null)
 
       const input = {
@@ -193,7 +215,9 @@ describe('CardService', () => {
         linkedAccountId: 'invalid-linked-account',
       }
 
-      await expect(CardService.createCard(mockUserId, input)).rejects.toThrow('Linked account not found')
+      await expect(CardService.createCard(mockUserId, input)).rejects.toThrow(
+        'Linked account not found'
+      )
     })
   })
 
@@ -225,33 +249,35 @@ describe('CardService', () => {
         cardId: 'card-123',
         fromAccountId: mockLinkedAccountId,
         toAccountId: mockAccountId,
-        amount: new Decimal(25000), // 20000 (required - current) + 10000 (minBalance)
+        amount: new Decimal(25000),
         currency: 'JPY',
         status: 'COMPLETED',
       }
 
-      mockPrisma.card.findUnique.mockResolvedValue(mockCard as any)
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
-        return await callback({
-          appAccount: {
-            update: jest.fn(),
-          },
-          card: {
-            update: jest.fn(),
-          },
-          autoTransfer: {
-            create: jest.fn().mockResolvedValue(mockAutoTransfer),
-          },
-          transaction: {
-            create: jest.fn(),
-          },
-        })
-      })
+      mockCardFindUnique.mockResolvedValue(mockCard)
+      mockPrismaTransaction.mockImplementation(
+        async (callback: (tx: Record<string, unknown>) => Promise<unknown>) => {
+          return await callback({
+            appAccount: {
+              update: mock(() => Promise.resolve({})),
+            },
+            card: {
+              update: mock(() => Promise.resolve({})),
+            },
+            autoTransfer: {
+              create: mock(() => Promise.resolve(mockAutoTransfer)),
+            },
+            transaction: {
+              create: mock(() => Promise.resolve({})),
+            },
+          })
+        }
+      )
 
       const requiredAmount = new Decimal(20000)
       const result = await CardService.executeAutoTransfer('card-123', requiredAmount, 'JPY')
 
-      expect(mockPrisma.card.findUnique).toHaveBeenCalledWith({
+      expect(mockCardFindUnique).toHaveBeenCalledWith({
         where: { id: 'card-123' },
         include: {
           account: true,
@@ -266,7 +292,7 @@ describe('CardService', () => {
       const mockCard = {
         id: 'card-123',
         type: 'DEBIT',
-        balance: new Decimal(50000), // Sufficient balance
+        balance: new Decimal(50000),
         autoTransferEnabled: true,
         linkedAccountId: mockLinkedAccountId,
         minBalance: new Decimal(10000),
@@ -277,7 +303,7 @@ describe('CardService', () => {
         },
       }
 
-      mockPrisma.card.findUnique.mockResolvedValue(mockCard as any)
+      mockCardFindUnique.mockResolvedValue(mockCard)
 
       const requiredAmount = new Decimal(20000)
       const result = await CardService.executeAutoTransfer('card-123', requiredAmount, 'JPY')
@@ -293,7 +319,7 @@ describe('CardService', () => {
         userId: mockUserId,
       }
 
-      mockPrisma.card.findUnique.mockResolvedValue(mockCard as any)
+      mockCardFindUnique.mockResolvedValue(mockCard)
 
       const requiredAmount = new Decimal(20000)
 
@@ -313,11 +339,11 @@ describe('CardService', () => {
         userId: mockUserId,
         linkedAccount: {
           id: mockLinkedAccountId,
-          balance: new Decimal(5000), // Insufficient
+          balance: new Decimal(5000),
         },
       }
 
-      mockPrisma.card.findUnique.mockResolvedValue(mockCard as any)
+      mockCardFindUnique.mockResolvedValue(mockCard)
 
       const requiredAmount = new Decimal(20000)
 
@@ -351,14 +377,14 @@ describe('CardService', () => {
         userId: mockUserId,
       }
 
-      mockPrisma.card.findFirst.mockResolvedValue(mockCard as any)
-      mockPrisma.transaction.aggregate.mockResolvedValue({
+      mockCardFindFirst.mockResolvedValue(mockCard)
+      mockTransactionAggregate.mockResolvedValue({
         _sum: { amount: new Decimal(10000) },
       })
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockPrismaTransaction.mockImplementation(async (callback: Function) => {
         return await callback({
-          card: { update: jest.fn() },
-          transaction: { create: jest.fn().mockResolvedValue(mockTransaction) },
+          card: { update: mock(() => Promise.resolve({})) },
+          transaction: { create: mock(() => Promise.resolve(mockTransaction)) },
         })
       })
 
@@ -370,7 +396,7 @@ describe('CardService', () => {
         'Test payment'
       )
 
-      expect(mockPrisma.card.findFirst).toHaveBeenCalledWith({
+      expect(mockCardFindFirst).toHaveBeenCalledWith({
         where: { id: 'card-123', userId: mockUserId, isActive: true },
         include: { account: true },
       })
@@ -388,9 +414,9 @@ describe('CardService', () => {
         account: { id: mockAccountId, currency: 'JPY' },
       }
 
-      mockPrisma.card.findFirst.mockResolvedValue(mockCard as any)
-      mockPrisma.transaction.aggregate.mockResolvedValue({
-        _sum: { amount: new Decimal(95000) }, // Almost at limit
+      mockCardFindFirst.mockResolvedValue(mockCard)
+      mockTransactionAggregate.mockResolvedValue({
+        _sum: { amount: new Decimal(95000) },
       })
 
       await expect(
@@ -402,7 +428,7 @@ describe('CardService', () => {
       const mockCard = {
         id: 'card-123',
         type: 'DEBIT',
-        balance: new Decimal(3000), // Insufficient
+        balance: new Decimal(3000),
         autoTransferEnabled: true,
         userId: mockUserId,
         isActive: true,
@@ -418,16 +444,16 @@ describe('CardService', () => {
         userId: mockUserId,
       }
 
-      mockPrisma.card.findFirst.mockResolvedValue(mockCard as any)
-      
-      // Mock executeAutoTransfer
-      const executeAutoTransferSpy = jest.spyOn(CardService, 'executeAutoTransfer')
-        .mockResolvedValue({} as any)
+      mockCardFindFirst.mockResolvedValue(mockCard)
 
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      const executeAutoTransferSpy = spyOn(CardService, 'executeAutoTransfer').mockResolvedValue(
+        {} as Awaited<ReturnType<typeof CardService.executeAutoTransfer>>
+      )
+
+      mockPrismaTransaction.mockImplementation(async (callback: Function) => {
         return await callback({
-          card: { update: jest.fn() },
-          transaction: { create: jest.fn().mockResolvedValue(mockTransaction) },
+          card: { update: mock(() => Promise.resolve({})) },
+          transaction: { create: mock(() => Promise.resolve(mockTransaction)) },
         })
       })
 
@@ -449,13 +475,13 @@ describe('CardService', () => {
       const mockCard = {
         id: 'card-123',
         type: 'PREPAID',
-        balance: new Decimal(3000), // Insufficient
+        balance: new Decimal(3000),
         userId: mockUserId,
         isActive: true,
         account: { id: mockAccountId, currency: 'JPY' },
       }
 
-      mockPrisma.card.findFirst.mockResolvedValue(mockCard as any)
+      mockCardFindFirst.mockResolvedValue(mockCard)
 
       await expect(
         CardService.processCardPayment(mockUserId, 'card-123', 5000, 'JPY', 'Test payment')
@@ -479,13 +505,13 @@ describe('CardService', () => {
         userId: mockUserId,
       }
 
-      mockPrisma.card.findFirst.mockResolvedValue(mockCard as any)
-      mockPrisma.appAccount.findFirst.mockResolvedValue(mockFromAccount as any)
-      mockPrisma.$transaction.mockImplementation(async (callback) => {
+      mockCardFindFirst.mockResolvedValue(mockCard)
+      mockAppAccountFindFirst.mockResolvedValue(mockFromAccount)
+      mockPrismaTransaction.mockImplementation(async (callback: Function) => {
         return await callback({
-          appAccount: { update: jest.fn() },
-          card: { update: jest.fn() },
-          transaction: { create: jest.fn() },
+          appAccount: { update: mock(() => Promise.resolve({})) },
+          card: { update: mock(() => Promise.resolve({})) },
+          transaction: { create: mock(() => Promise.resolve({})) },
         })
       })
 
@@ -497,13 +523,13 @@ describe('CardService', () => {
       )
 
       expect(result).toBe(true)
-      expect(mockPrisma.card.findFirst).toHaveBeenCalledWith({
+      expect(mockCardFindFirst).toHaveBeenCalledWith({
         where: { id: 'card-123', userId: mockUserId, type: 'PREPAID' },
       })
     })
 
     it('should throw error if prepaid card not found', async () => {
-      mockPrisma.card.findFirst.mockResolvedValue(null)
+      mockCardFindFirst.mockResolvedValue(null)
 
       await expect(
         CardService.chargePrepaidCard(mockUserId, 'card-123', 10000, 'from-account-123')
@@ -519,12 +545,12 @@ describe('CardService', () => {
 
       const mockFromAccount = {
         id: 'from-account-123',
-        balance: new Decimal(5000), // Insufficient
+        balance: new Decimal(5000),
         userId: mockUserId,
       }
 
-      mockPrisma.card.findFirst.mockResolvedValue(mockCard as any)
-      mockPrisma.appAccount.findFirst.mockResolvedValue(mockFromAccount as any)
+      mockCardFindFirst.mockResolvedValue(mockCard)
+      mockAppAccountFindFirst.mockResolvedValue(mockFromAccount)
 
       await expect(
         CardService.chargePrepaidCard(mockUserId, 'card-123', 10000, 'from-account-123')
@@ -549,11 +575,11 @@ describe('CardService', () => {
         },
       ]
 
-      mockPrisma.card.findMany.mockResolvedValue(mockCards as any)
+      mockCardFindMany.mockResolvedValue(mockCards)
 
       const result = await CardService.getCards(mockUserId)
 
-      expect(mockPrisma.card.findMany).toHaveBeenCalledWith({
+      expect(mockCardFindMany).toHaveBeenCalledWith({
         where: { userId: mockUserId, isActive: true },
         include: {
           account: true,
@@ -572,11 +598,11 @@ describe('CardService', () => {
         { id: 'card-2', isActive: false },
       ]
 
-      mockPrisma.card.findMany.mockResolvedValue(mockCards as any)
+      mockCardFindMany.mockResolvedValue(mockCards)
 
       const result = await CardService.getCards(mockUserId, true)
 
-      expect(mockPrisma.card.findMany).toHaveBeenCalledWith({
+      expect(mockCardFindMany).toHaveBeenCalledWith({
         where: { userId: mockUserId },
         include: {
           account: true,
@@ -605,8 +631,8 @@ describe('CardService', () => {
         _sum: { amount: new Decimal(15000) },
       }
 
-      mockPrisma.card.findFirst.mockResolvedValue(mockCard as any)
-      mockPrisma.transaction.aggregate.mockResolvedValue(mockMonthlyUsage as any)
+      mockCardFindFirst.mockResolvedValue(mockCard)
+      mockTransactionAggregate.mockResolvedValue(mockMonthlyUsage)
 
       const result = await CardService.getCardDetail(mockUserId, 'card-123')
 
@@ -617,9 +643,11 @@ describe('CardService', () => {
     })
 
     it('should throw error if card not found', async () => {
-      mockPrisma.card.findFirst.mockResolvedValue(null)
+      mockCardFindFirst.mockResolvedValue(null)
 
-      await expect(CardService.getCardDetail(mockUserId, 'card-123')).rejects.toThrow('Card not found')
+      await expect(CardService.getCardDetail(mockUserId, 'card-123')).rejects.toThrow(
+        'Card not found'
+      )
     })
   })
 })

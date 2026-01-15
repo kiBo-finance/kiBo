@@ -1,15 +1,24 @@
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
+import { cleanup } from '@testing-library/react'
+
+// Define mock functions
+const mockSendVerificationEmail = mock(() => Promise.resolve({ data: { success: true }, error: null }))
+
+// Mock the auth-client module before importing the component
+mock.module('~/lib/auth-client', () => ({
+  authClient: {
+    sendVerificationEmail: mockSendVerificationEmail,
+  },
+}))
+
+import { EmailVerificationStatus } from '~/components/auth/EmailVerificationStatus'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { EmailVerificationStatus } from '@/components/auth/EmailVerificationStatus'
-import { authClient } from '@/lib/auth-client'
-
-// authClientをモック
-jest.mock('@/lib/auth-client')
-
-const mockAuthClient = authClient as jest.Mocked<typeof authClient>
 
 describe('EmailVerificationStatus', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    cleanup() // Clean up DOM between tests
+    mockSendVerificationEmail.mockReset()
+    mockSendVerificationEmail.mockImplementation(() => Promise.resolve({ data: { success: true }, error: null }))
   })
 
   it('should show verified status when email is verified', () => {
@@ -28,12 +37,14 @@ describe('EmailVerificationStatus', () => {
   })
 
   it('should handle successful email resend', async () => {
-    const mockOnResendSuccess = jest.fn()
+    const mockOnResendSuccess = mock(() => {})
 
-    mockAuthClient.sendVerificationEmail.mockResolvedValue({
-      data: { success: true },
-      error: null,
-    })
+    mockSendVerificationEmail.mockImplementation(() =>
+      Promise.resolve({
+        data: { success: true },
+        error: null,
+      })
+    )
 
     render(
       <EmailVerificationStatus
@@ -56,17 +67,19 @@ describe('EmailVerificationStatus', () => {
       expect(mockOnResendSuccess).toHaveBeenCalled()
     })
 
-    expect(mockAuthClient.sendVerificationEmail).toHaveBeenCalledWith({
+    expect(mockSendVerificationEmail).toHaveBeenCalledWith({
       email: 'test@example.com',
       callbackURL: '/dashboard',
     })
   })
 
   it('should handle email resend error', async () => {
-    mockAuthClient.sendVerificationEmail.mockResolvedValue({
-      data: null,
-      error: { message: 'Failed to send email' },
-    })
+    mockSendVerificationEmail.mockImplementation(() =>
+      Promise.resolve({
+        data: null,
+        error: { message: 'Failed to send email' },
+      })
+    )
 
     render(<EmailVerificationStatus email="test@example.com" isVerified={false} />)
 
@@ -82,7 +95,7 @@ describe('EmailVerificationStatus', () => {
   })
 
   it('should disable resend button during submission', async () => {
-    mockAuthClient.sendVerificationEmail.mockImplementation(
+    mockSendVerificationEmail.mockImplementation(
       () =>
         new Promise((resolve) =>
           setTimeout(() => resolve({ data: { success: true }, error: null }), 100)

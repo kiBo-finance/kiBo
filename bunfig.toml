@@ -1,0 +1,15 @@
+[test]
+# Preload setup files before tests run
+preload = ["./bun.setup.ts"]
+
+# Enable coverage (disabled by default, enable with --coverage flag)
+coverage = false
+
+# Test timeout in milliseconds
+timeout = 30000
+
+# Coverage threshold watermark
+coverageThreshold = 50
+
+# Enable happy-dom for browser environment simulation
+dom = "happy-dom"

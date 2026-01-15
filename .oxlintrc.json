@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "import", "unicorn", "jsx-a11y"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "globals": {
+    "React": "readonly"
+  },
+  "settings": {
+    "react": {
+      "version": "19.0"
+    }
+  },
+  "rules": {
+    // TypeScript
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-unused-vars": "warn",
+    "typescript/prefer-ts-expect-error": "error",
+
+    // React
+    "react/jsx-no-duplicate-props": "error",
+    "react/jsx-no-undef": "error",
+    "react/no-children-prop": "error",
+    "react/no-danger-with-children": "error",
+    "react/no-direct-mutation-state": "error",
+
+    // Import
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    "import/no-cycle": "warn",
+
+    // Unicorn
+    "unicorn/no-null": "off",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/no-useless-undefined": "warn",
+
+    // General
+    "no-console": "off",
+    "no-debugger": "error",
+    "no-unused-vars": "off",
+    "eqeqeq": "error"
+  },
+  "ignorePatterns": ["node_modules", ".next", "dist", "coverage", "prisma/migrations", "**/*.d.ts", "__tests__", "__mocks__", "*.test.ts", "*.test.tsx", "jest.setup.js", "jest.config.js"]
+}

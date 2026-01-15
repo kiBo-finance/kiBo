@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxfmt/refs/heads/babel-compat/npm/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": false,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "quoteProps": "as-needed",
+  "experimentalSortImports": {
+    "groups": [["^react$", "^react-dom$"], ["^next"], ["^@?\\w"], ["^@/"], ["^\\.\\."], ["^\\."]],
+    "order": "asc",
+    "ignoreCase": true,
+    "newlinesBetween": true
+  },
+  "experimentalTailwindcss": {
+    "attributes": ["class", "className"],
+    "config": "./tailwind.config.ts"
+  },
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "dist",
+    "coverage",
+    "prisma/migrations",
+    "bun.lock",
+    "*.d.ts"
+  ]
+}

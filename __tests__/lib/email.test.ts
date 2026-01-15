@@ -1,4 +1,4 @@
-import { sendEmail } from '@/lib/email'
+import { sendEmail } from '~/lib/email'
 
 // console.logをモック
 const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation()
