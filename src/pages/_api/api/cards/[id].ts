@@ -4,6 +4,14 @@ import { CardService } from '../../../../lib/services/card-service'
 import type { SessionUser } from '../../../../lib/types/auth'
 import { z } from 'zod'
 
+// Extract ID from URL path
+function getIdFromUrl(request: Request): string | null {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const id = pathParts[pathParts.length - 1]
+  return id ? id : null
+}
+
 const UpdateCardSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   brand: z.string().optional(),
@@ -23,8 +31,13 @@ const UpdateCardSchema = z.object({
   isActive: z.boolean().optional(),
 })
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request) {
   try {
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'ID is required' }, { status: 400 })
+    }
+
     const session = await auth.api.getSession({
       headers: request.headers,
     })
@@ -33,7 +46,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
     const user = session.user as SessionUser
 
     const card = await CardService.getCardDetail(user.id, id)
@@ -51,8 +63,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: Request) {
   try {
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'ID is required' }, { status: 400 })
+    }
+
     const session = await auth.api.getSession({
       headers: request.headers,
     })
@@ -61,7 +78,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
     const body = await request.json()
     const validatedData = UpdateCardSchema.parse(body)
     const user = session.user as SessionUser
@@ -88,11 +104,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request) {
   try {
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'ID is required' }, { status: 400 })
+    }
+
     const session = await auth.api.getSession({
       headers: request.headers,
     })
@@ -101,7 +119,6 @@ export async function DELETE(
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
     const user = session.user as SessionUser
     const userId = user.id
 

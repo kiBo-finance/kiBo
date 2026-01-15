@@ -2,6 +2,13 @@ import { auth } from '../../../../lib/auth'
 import { prisma } from '../../../../lib/db'
 import { z } from 'zod'
 
+function getCodeFromUrl(request: Request): string | null {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const code = pathParts[pathParts.length - 1]
+  return code && code !== 'currencies' ? code : null
+}
+
 const updateCurrencySchema = z.object({
   symbol: z.string().min(1).max(10).optional(),
   name: z.string().min(1).max(100).optional(),
@@ -13,7 +20,7 @@ const updateCurrencySchema = z.object({
  * GET /api/currencies/[code]
  * 特定の通貨情報を取得
  */
-export async function GET(request: Request, { params }: { params: Promise<{ code: string }> }) {
+export async function GET(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -23,7 +30,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ code
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { code } = await params
+    const code = getCodeFromUrl(request)
+    if (!code) {
+      return Response.json({ error: 'Currency code is required' }, { status: 400 })
+    }
 
     const currency = await prisma.currency.findUnique({
       where: { code: code.toUpperCase() },
@@ -44,10 +54,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ code
  * PATCH /api/currencies/[code]
  * 通貨情報を更新（管理者権限が必要）
  */
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function PATCH(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -57,7 +64,10 @@ export async function PATCH(
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { code } = await params
+    const code = getCodeFromUrl(request)
+    if (!code) {
+      return Response.json({ error: 'Currency code is required' }, { status: 400 })
+    }
 
     // TODO: 管理者権限チェックを実装
     // if (!session.user.isAdmin) {
@@ -99,10 +109,7 @@ export async function PATCH(
  * 通貨を削除（管理者権限が必要）
  * 注意: 使用中の通貨は削除できない
  */
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function DELETE(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -112,7 +119,10 @@ export async function DELETE(
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { code } = await params
+    const code = getCodeFromUrl(request)
+    if (!code) {
+      return Response.json({ error: 'Currency code is required' }, { status: 400 })
+    }
 
     // TODO: 管理者権限チェックを実装
     // if (!session.user.isAdmin) {

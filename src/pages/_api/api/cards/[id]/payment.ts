@@ -3,6 +3,17 @@ import { CardService } from '../../../../../lib/services/card-service'
 import type { SessionUser } from '../../../../../lib/types/auth'
 import { z } from 'zod'
 
+function getIdFromUrl(request: Request): string | null {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  // Find 'cards' index and get the next segment
+  const cardsIndex = pathParts.indexOf('cards')
+  if (cardsIndex !== -1 && cardsIndex + 1 < pathParts.length) {
+    return pathParts[cardsIndex + 1]
+  }
+  return null
+}
+
 const PaymentSchema = z.object({
   amount: z.number().positive(),
   currency: z.string().length(3),
@@ -11,7 +22,7 @@ const PaymentSchema = z.object({
   date: z.string().datetime().optional(),
 })
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -21,7 +32,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'Card ID is required' }, { status: 400 })
+    }
     const body = await request.json()
     const validatedData = PaymentSchema.parse(body)
     const user = session.user as SessionUser

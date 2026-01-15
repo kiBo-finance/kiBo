@@ -4,6 +4,14 @@ import type { SessionUser } from '../../../../lib/types/auth'
 import Decimal from 'decimal.js'
 import { z } from 'zod'
 
+// Extract ID from URL path
+function getIdFromUrl(request: Request): string | null {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const id = pathParts[pathParts.length - 1]
+  return id ? id : null
+}
+
 const UpdateTransactionSchema = z.object({
   amount: z.number().positive().optional(),
   currency: z.string().optional(),
@@ -20,9 +28,13 @@ const UpdateTransactionSchema = z.object({
   notes: z.string().optional(),
 })
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request) {
   try {
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'ID is required' }, { status: 400 })
+    }
+
     const session = await auth.api.getSession({
       headers: request.headers,
     })
@@ -76,9 +88,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request) {
   try {
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'ID is required' }, { status: 400 })
+    }
+
     const session = await auth.api.getSession({
       headers: request.headers,
     })
@@ -267,12 +283,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request) {
   try {
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'ID is required' }, { status: 400 })
+    }
+
     const session = await auth.api.getSession({
       headers: request.headers,
     })
