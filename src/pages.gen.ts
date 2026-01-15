@@ -33,6 +33,8 @@ import type { getConfig as File_DashboardTransactionsIndex_getConfig } from './p
 import type { getConfig as File_Index_getConfig } from './pages/index';
 // prettier-ignore
 import type { getConfig as File_Login_getConfig } from './pages/login';
+// prettier-ignore
+import type { getConfig as File_Signup_getConfig } from './pages/signup';
 
 // prettier-ignore
 type Page =
@@ -50,7 +52,8 @@ type Page =
 | ({ path: '/dashboard/settings/notifications' } & GetConfigResponse<typeof File_DashboardSettingsNotifications_getConfig>)
 | ({ path: '/dashboard/transactions' } & GetConfigResponse<typeof File_DashboardTransactionsIndex_getConfig>)
 | ({ path: '/' } & GetConfigResponse<typeof File_Index_getConfig>)
-| ({ path: '/login' } & GetConfigResponse<typeof File_Login_getConfig>);
+| ({ path: '/login' } & GetConfigResponse<typeof File_Login_getConfig>)
+| ({ path: '/signup' } & GetConfigResponse<typeof File_Signup_getConfig>);
 
 // prettier-ignore
 declare module 'waku/router' {
