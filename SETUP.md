@@ -5,13 +5,14 @@
 ## 目次
 
 1. [必要な環境](#必要な環境)
-2. [クイックスタート（Docker）](#クイックスタートdocker)
-3. [ローカル開発環境のセットアップ](#ローカル開発環境のセットアップ)
-4. [環境変数の設定](#環境変数の設定)
-5. [データベースの設定](#データベースの設定)
-6. [開発サーバーの起動](#開発サーバーの起動)
-7. [本番ビルドとデプロイ](#本番ビルドとデプロイ)
-8. [トラブルシューティング](#トラブルシューティング)
+2. [クイックスタート（ネイティブ）](#クイックスタートネイティブ)
+3. [クイックスタート（Docker）](#クイックスタートdocker)
+4. [ローカル開発環境のセットアップ](#ローカル開発環境のセットアップ)
+5. [環境変数の設定](#環境変数の設定)
+6. [データベースの設定](#データベースの設定)
+7. [開発サーバーの起動](#開発サーバーの起動)
+8. [本番ビルドとデプロイ](#本番ビルドとデプロイ)
+9. [トラブルシューティング](#トラブルシューティング)
 
 ---
 
@@ -52,9 +53,151 @@ scoop install postgresql
 
 ---
 
+## クイックスタート（ネイティブ）
+
+Docker を使わずにネイティブ環境で起動する手順です。
+
+### 前提条件
+
+以下がインストールされている必要があります:
+
+- **Bun** 1.x 以上
+- **PostgreSQL** 16.x
+
+### macOS
+
+```bash
+# 1. 前提ソフトウェアをインストール
+brew install oven-sh/bun/bun postgresql@16
+
+# 2. PostgreSQL を起動
+brew services start postgresql@16
+
+# 3. リポジトリをクローン
+git clone https://github.com/kiBo-finance/kiBo.git
+cd kiBo
+
+# 4. 依存関係をインストール
+bun install
+
+# 5. データベースを作成
+createdb kibo_dev
+
+# 6. 環境変数を設定
+cat > .env << 'EOF'
+DATABASE_URL="postgresql://$(whoami)@localhost:5432/kibo_dev"
+BETTER_AUTH_SECRET="dev-secret-key-minimum-32-characters-long"
+BETTER_AUTH_URL="http://localhost:3000"
+EOF
+
+# 7. データベーススキーマを適用
+bun run db:push
+
+# 8. 初期データを投入
+bun run db:seed
+
+# 9. 開発サーバーを起動
+bun run dev
+
+# ブラウザで http://localhost:3000 にアクセス
+```
+
+### Ubuntu/Debian
+
+```bash
+# 1. 前提ソフトウェアをインストール
+curl -fsSL https://bun.sh/install | bash
+source ~/.bashrc
+sudo apt update && sudo apt install -y postgresql postgresql-contrib
+
+# 2. PostgreSQL を起動
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# 3. データベースユーザーを作成
+sudo -u postgres createuser --createdb $(whoami)
+
+# 4. リポジトリをクローン
+git clone https://github.com/kiBo-finance/kiBo.git
+cd kiBo
+
+# 5. 依存関係をインストール
+bun install
+
+# 6. データベースを作成
+createdb kibo_dev
+
+# 7. 環境変数を設定
+cat > .env << 'EOF'
+DATABASE_URL="postgresql://localhost:5432/kibo_dev"
+BETTER_AUTH_SECRET="dev-secret-key-minimum-32-characters-long"
+BETTER_AUTH_URL="http://localhost:3000"
+EOF
+
+# 8. データベーススキーマを適用
+bun run db:push
+
+# 9. 初期データを投入
+bun run db:seed
+
+# 10. 開発サーバーを起動
+bun run dev
+
+# ブラウザで http://localhost:3000 にアクセス
+```
+
+### Windows (PowerShell)
+
+```powershell
+# 1. 前提ソフトウェアをインストール（管理者権限で実行）
+# Scoop を使用する場合
+scoop install bun postgresql
+
+# 2. PostgreSQL サービスを起動
+pg_ctl start -D "C:\Program Files\PostgreSQL\16\data"
+
+# 3. リポジトリをクローン
+git clone https://github.com/kiBo-finance/kiBo.git
+cd kiBo
+
+# 4. 依存関係をインストール
+bun install
+
+# 5. データベースを作成
+createdb kibo_dev
+
+# 6. 環境変数ファイルを作成
+Copy-Item .env.example .env
+# .env ファイルを編集して以下を設定:
+# DATABASE_URL="postgresql://postgres:password@localhost:5432/kibo_dev"
+# BETTER_AUTH_SECRET="dev-secret-key-minimum-32-characters-long"
+# BETTER_AUTH_URL="http://localhost:3000"
+
+# 7. データベーススキーマを適用
+bun run db:push
+
+# 8. 初期データを投入
+bun run db:seed
+
+# 9. 開発サーバーを起動
+bun run dev
+```
+
+### ワンライナー（macOS/Linux 上級者向け）
+
+PostgreSQL がすでに動作している場合、以下のコマンドで一発起動できます:
+
+```bash
+git clone https://github.com/kiBo-finance/kiBo.git && cd kiBo && bun install && createdb kibo_dev 2>/dev/null; echo 'DATABASE_URL="postgresql://localhost:5432/kibo_dev"
+BETTER_AUTH_SECRET="dev-secret-key-minimum-32-characters-long"
+BETTER_AUTH_URL="http://localhost:3000"' > .env && bun run db:push && bun run db:seed && bun run dev
+```
+
+---
+
 ## クイックスタート（Docker）
 
-最も簡単な方法は Docker Compose を使用することです。
+Docker Compose を使用する方法です。
 
 ```bash
 # 1. リポジトリをクローン
