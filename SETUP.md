@@ -58,7 +58,7 @@ scoop install postgresql
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/your-username/kibo.git
+git clone https://github.com/kiBo-finance/kiBo.git
 cd kibo
 
 # 2. 環境変数ファイルを作成
@@ -86,7 +86,7 @@ open http://localhost:3000
 ### 1. リポジトリのクローン
 
 ```bash
-git clone https://github.com/your-username/kibo.git
+git clone https://github.com/kiBo-finance/kiBo.git
 cd kibo
 ```
 
@@ -425,6 +425,6 @@ grep "build" package.json
 
 問題が解決しない場合：
 
-1. [GitHub Issues](https://github.com/your-username/kibo/issues) で報告
+1. [GitHub Issues](https://github.com/kiBo-finance/kiBo/issues) で報告
 2. [TROUBLESHOOTING.md](TROUBLESHOOTING.md) を確認
 3. Docker ログを確認: `docker-compose logs -f`
