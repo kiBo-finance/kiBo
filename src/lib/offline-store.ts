@@ -123,13 +123,13 @@ export async function getPendingTransactions(): Promise<OfflineTransaction[]> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORES.PENDING_TRANSACTIONS, 'readonly')
     const store = transaction.objectStore(STORES.PENDING_TRANSACTIONS)
-    const index = store.index('synced')
-    // IndexedDB supports boolean keys but TypeScript types don't reflect this
-    const request = index.getAll(false as unknown as IDBValidKey)
+    const request = store.getAll()
 
     request.onsuccess = () => {
       db.close()
-      resolve(request.result)
+      // Filter for unsynced transactions
+      const pending = (request.result as OfflineTransaction[]).filter((t) => !t.synced)
+      resolve(pending)
     }
 
     request.onerror = () => {
@@ -148,13 +148,13 @@ export async function getPendingCount(): Promise<number> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORES.PENDING_TRANSACTIONS, 'readonly')
     const store = transaction.objectStore(STORES.PENDING_TRANSACTIONS)
-    const index = store.index('synced')
-    // IndexedDB supports boolean keys but TypeScript types don't reflect this
-    const request = index.count(false as unknown as IDBValidKey)
+    const request = store.getAll()
 
     request.onsuccess = () => {
       db.close()
-      resolve(request.result)
+      // Count unsynced transactions
+      const count = (request.result as OfflineTransaction[]).filter((t) => !t.synced).length
+      resolve(count)
     }
 
     request.onerror = () => {
@@ -275,14 +275,15 @@ export async function clearSyncedTransactions(): Promise<void> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORES.PENDING_TRANSACTIONS, 'readwrite')
     const store = transaction.objectStore(STORES.PENDING_TRANSACTIONS)
-    const index = store.index('synced')
-    // IndexedDB supports boolean keys but TypeScript types don't reflect this
-    const request = index.openCursor(true as unknown as IDBValidKey)
+    const request = store.openCursor()
 
     request.onsuccess = () => {
       const cursor = request.result
       if (cursor) {
-        cursor.delete()
+        const record = cursor.value as OfflineTransaction
+        if (record.synced) {
+          cursor.delete()
+        }
         cursor.continue()
       } else {
         db.close()
