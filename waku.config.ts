@@ -9,8 +9,9 @@ const config = {
   unstable_viteConfigs: {
     common: () => ({
       server: {
-        // Allow all hosts in production (typically behind reverse proxy)
-        // Or specify via ALLOWED_HOSTS env var (comma-separated)
+        // Dev server only: Allow all hosts when behind reverse proxy
+        // Note: This may not work with Waku's unstable API
+        // Production uses `bun run start` which doesn't use Vite dev server
         allowedHosts: process.env.ALLOWED_HOSTS
           ? process.env.ALLOWED_HOSTS.split(',')
           : true,
