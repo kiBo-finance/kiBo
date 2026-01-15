@@ -14,11 +14,20 @@ const updateAccountSchema = z.object({
   fixedDepositMaturity: z.string().datetime().optional().nullable(),
 })
 
+// Extract ID from URL path /api/accounts/[id]
+function getIdFromUrl(request: Request): string | null {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  // Path is /api/accounts/[id], so ID is the last segment
+  const id = pathParts[pathParts.length - 1]
+  return id && id !== 'accounts' ? id : null
+}
+
 /**
  * GET /api/accounts/[id]
  * 特定の口座情報を取得
  */
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -28,7 +37,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'Account ID is required' }, { status: 400 })
+    }
     const user = session.user as SessionUser
     const userId = user.id
 
@@ -76,7 +88,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
  * PATCH /api/accounts/[id]
  * 口座情報を更新
  */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -86,7 +98,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'Account ID is required' }, { status: 400 })
+    }
     const user = session.user as SessionUser
 
     const account = await prisma.appAccount.findFirst({
@@ -188,10 +203,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
  * 口座を削除（論理削除）
  * 注意: 取引履歴がある口座は削除できない
  */
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -201,7 +213,10 @@ export async function DELETE(
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'Account ID is required' }, { status: 400 })
+    }
     const user = session.user as SessionUser
 
     const account = await prisma.appAccount.findFirst({

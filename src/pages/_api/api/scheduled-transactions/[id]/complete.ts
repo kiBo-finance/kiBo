@@ -3,7 +3,18 @@ import { prisma } from '../../../../../lib/db'
 import type { SessionUser } from '../../../../../lib/types/auth'
 import { Decimal } from 'decimal.js'
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+function getIdFromUrl(request: Request): string | null {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  // Find 'scheduled-transactions' index and get the next segment
+  const stIndex = pathParts.indexOf('scheduled-transactions')
+  if (stIndex !== -1 && stIndex + 1 < pathParts.length) {
+    return pathParts[stIndex + 1]
+  }
+  return null
+}
+
+export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -13,7 +24,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'Transaction ID is required' }, { status: 400 })
+    }
 
     const user = session.user as SessionUser
 

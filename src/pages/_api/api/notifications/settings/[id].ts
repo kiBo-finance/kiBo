@@ -2,10 +2,14 @@ import { auth } from '../../../../../lib/auth'
 import { prisma } from '../../../../../lib/db'
 import type { SessionUser } from '../../../../../lib/types/auth'
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+function getIdFromUrl(request: Request): string | null {
+  const url = new URL(request.url)
+  const pathParts = url.pathname.split('/')
+  const id = pathParts[pathParts.length - 1]
+  return id && id !== 'settings' ? id : null
+}
+
+export async function DELETE(request: Request) {
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -15,7 +19,10 @@ export async function DELETE(
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params
+    const id = getIdFromUrl(request)
+    if (!id) {
+      return Response.json({ error: 'Settings ID is required' }, { status: 400 })
+    }
 
     const user = session.user as SessionUser
 
