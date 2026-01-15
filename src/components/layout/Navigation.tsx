@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '../ui/button'
 import { cn } from '../../lib/utils'
 import {
   Home,
@@ -8,14 +7,12 @@ import {
   PiggyBank,
   TrendingUp,
   Settings,
-  Menu,
-  X,
   Calendar,
   BarChart3,
   Wallet,
 } from 'lucide-react'
-import { Link, useRouter } from 'waku/router/client'
-import { useState, useEffect } from 'react'
+import { Link } from 'waku/router/client'
+import { useEffect, useState } from 'react'
 
 const navigationItems = [
   {
@@ -70,12 +67,12 @@ const navigationItems = [
 
 interface NavigationProps {
   className?: string
+  isMobile?: boolean
+  onNavigate?: () => void
 }
 
-export function Navigation({ className }: NavigationProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+export function Navigation({ className, isMobile = false, onNavigate }: NavigationProps) {
   const [pathname, setPathname] = useState('')
-  const router = useRouter()
 
   useEffect(() => {
     // Get pathname from window.location on client side
@@ -84,72 +81,58 @@ export function Navigation({ className }: NavigationProps) {
     }
   }, [])
 
-  return (
-    <>
-      {/* Mobile menu button */}
-      <div className="md:hidden">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2"
-        >
-          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
-      </div>
-
-      {/* Desktop navigation */}
-      <nav className={cn('hidden md:flex space-x-8', className)}>
+  // Mobile navigation (shown in hamburger menu dropdown)
+  if (isMobile) {
+    return (
+      <nav className={cn('space-y-1 px-4 py-2', className)}>
         {navigationItems.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
               key={item.href}
               to={item.href as any}
+              onClick={onNavigate}
               className={cn(
-                'flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                'flex items-center space-x-3 px-3 py-3 rounded-md text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
               )}
-              title={item.description}
             >
-              <item.icon className="h-4 w-4" />
-              <span>{item.name}</span>
+              <item.icon className="h-5 w-5" />
+              <div>
+                <div>{item.name}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{item.description}</div>
+              </div>
             </Link>
           )
         })}
       </nav>
+    )
+  }
 
-      {/* Mobile navigation menu */}
-      {isMobileMenuOpen && (
-        <div className="absolute left-0 right-0 top-16 z-50 border-b border-gray-200 bg-white shadow-lg md:hidden">
-          <nav className="space-y-1 px-4 py-2">
-            {navigationItems.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href as any}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    'flex items-center space-x-3 px-3 py-3 rounded-md text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <div>
-                    <div>{item.name}</div>
-                    <div className="text-xs text-gray-500">{item.description}</div>
-                  </div>
-                </Link>
-              )
-            })}
-          </nav>
-        </div>
-      )}
-    </>
+  // Desktop navigation
+  return (
+    <nav className={cn('space-x-1 lg:space-x-2', className)}>
+      {navigationItems.map((item) => {
+        const isActive = pathname === item.href
+        return (
+          <Link
+            key={item.href}
+            to={item.href as any}
+            className={cn(
+              'inline-flex items-center space-x-1 px-2 py-2 rounded-md text-sm font-medium transition-colors lg:px-3 lg:space-x-2',
+              isActive
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800'
+            )}
+            title={item.description}
+          >
+            <item.icon className="h-4 w-4" />
+            <span className="hidden xl:inline">{item.name}</span>
+          </Link>
+        )
+      })}
+    </nav>
   )
 }
