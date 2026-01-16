@@ -158,7 +158,7 @@ function SelectLabel({ className, children }: SelectLabelProps) {
 }
 
 // SelectItem
-interface SelectItemProps extends Omit<ListBoxItemProps, 'className' | 'children' | 'id' | 'isDisabled' | 'value'> {
+interface SelectItemProps extends Omit<ListBoxItemProps, 'className' | 'children' | 'id' | 'isDisabled' | 'value' | 'textValue'> {
   className?: string
   children?: React.ReactNode
   // Support value for backwards compatibility (maps to id)
@@ -167,18 +167,23 @@ interface SelectItemProps extends Omit<ListBoxItemProps, 'className' | 'children
   // Support disabled for backwards compatibility (maps to isDisabled)
   disabled?: boolean
   isDisabled?: boolean
+  // textValue for accessibility and display in SelectValue
+  textValue?: string
 }
 
-function SelectItem({ className, children, value, id, disabled, isDisabled, ...props }: SelectItemProps) {
+function SelectItem({ className, children, value, id, disabled, isDisabled, textValue, ...props }: SelectItemProps) {
   // Map value to id for backwards compatibility
   const itemId = id ?? value
   // Map disabled to isDisabled for backwards compatibility
   const itemDisabled = isDisabled ?? disabled
+  // Extract textValue from children if not provided and children is a string
+  const derivedTextValue = textValue ?? (typeof children === 'string' ? children : undefined)
 
   return (
     <ListBoxItem
       id={itemId}
       isDisabled={itemDisabled}
+      textValue={derivedTextValue}
       className={composeRenderProps(className, (className) =>
         cn(
           'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-blue-50 focus:text-blue-900 hover:bg-gray-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-gray-700 dark:hover:bg-gray-700',

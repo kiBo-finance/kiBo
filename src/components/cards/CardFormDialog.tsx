@@ -207,7 +207,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                        <SelectItem key={day} value={day.toString()}>
+                        <SelectItem key={day} value={day.toString()} textValue={`${day}日`}>
                           {day}日
                         </SelectItem>
                       ))}
@@ -227,7 +227,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                        <SelectItem key={day} value={day.toString()}>
+                        <SelectItem key={day} value={day.toString()} textValue={`${day}日`}>
                           {day}日
                         </SelectItem>
                       ))}
@@ -261,7 +261,11 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                     {accounts
                       .filter((account) => account.id !== formData.accountId)
                       .map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
+                        <SelectItem
+                          key={account.id}
+                          value={account.id}
+                          textValue={`${account.name} (${account.currency})`}
+                        >
                           {account.name} ({account.currency})
                         </SelectItem>
                       ))}
@@ -327,7 +331,11 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
+                      <SelectItem
+                        key={account.id}
+                        value={account.id}
+                        textValue={`${account.name} (${account.currency})`}
+                      >
                         {account.name} ({account.currency})
                       </SelectItem>
                     ))}
@@ -374,7 +382,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                   </SelectTrigger>
                   <SelectContent>
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                      <SelectItem key={day} value={day.toString()}>
+                      <SelectItem key={day} value={day.toString()} textValue={`${day}日`}>
                         {day}日
                       </SelectItem>
                     ))}
@@ -479,7 +487,11 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
+                      <SelectItem
+                        key={account.id}
+                        value={account.id}
+                        textValue={`${account.name} (${account.currency})`}
+                      >
                         {account.name} ({account.currency})
                       </SelectItem>
                     ))}
