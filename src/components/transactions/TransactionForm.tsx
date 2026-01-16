@@ -70,6 +70,40 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
   const selectedAccount = accounts.find((acc) => acc.id === formData.accountId)
   const defaultCurrency = selectedAccount?.currency || 'JPY'
 
+  // 編集時に既存データを読み込む
+  useEffect(() => {
+    if (editingId) {
+      const loadTransaction = async () => {
+        try {
+          const response = await fetch(`/api/transactions/${editingId}`, {
+            credentials: 'include',
+          })
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success && result.data) {
+              const tx = result.data
+              setFormData({
+                amount: parseFloat(tx.amount) || 0,
+                currency: tx.currency || 'JPY',
+                type: tx.type || 'EXPENSE',
+                description: tx.description || '',
+                date: tx.date || new Date().toISOString(),
+                accountId: tx.accountId || '',
+                categoryId: tx.categoryId,
+                attachments: tx.attachments || [],
+                tags: tx.tags || [],
+              })
+              setTags(tx.tags || [])
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load transaction:', error)
+        }
+      }
+      loadTransaction()
+    }
+  }, [editingId, setFormData])
+
   useEffect(() => {
     if (selectedAccount && formData.currency !== selectedAccount.currency) {
       setFormData({ ...formData, currency: selectedAccount.currency })
