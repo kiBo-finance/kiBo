@@ -236,8 +236,98 @@ curl -X POST \
 - カスタマイズ自由
 - 運用負荷高
 
+## データベースマイグレーション
+
+### マイグレーションの概要
+
+本プロジェクトではPrisma Migrateを使用してデータベーススキーマを管理しています。
+
+### 開発環境
+
+```bash
+# マイグレーションの作成と適用
+bun run db:migrate
+
+# スキーマの直接プッシュ（マイグレーション履歴なし）
+bun run db:push
+
+# マイグレーション状態の確認
+bunx prisma migrate status
+```
+
+### 本番環境へのデプロイ
+
+本番環境へのデプロイ時は、以下の手順でマイグレーションを適用します：
+
+```bash
+# 本番データベースにマイグレーションを適用
+bunx prisma migrate deploy
+```
+
+**重要**: `migrate deploy` は以下の点で `migrate dev` と異なります：
+- マイグレーションファイルを自動作成しません
+- 既存のマイグレーションファイルのみを適用します
+- 本番環境での使用に適しています
+
+### 新規データベースのセットアップ
+
+新しい環境でデータベースを初期化する場合：
+
+```bash
+# マイグレーションの適用
+bunx prisma migrate deploy
+
+# 初期データの投入（通貨マスターなど）
+bun run db:seed
+```
+
+### マイグレーション作成のベストプラクティス
+
+1. **開発環境でマイグレーションを作成**
+   ```bash
+   bunx prisma migrate dev --name describe_your_changes
+   ```
+
+2. **マイグレーションファイルをコミット**
+   ```bash
+   git add prisma/migrations
+   git commit -m "Add migration: describe_your_changes"
+   ```
+
+3. **本番環境でデプロイ**
+   ```bash
+   bunx prisma migrate deploy
+   ```
+
+### トラブルシューティング
+
+#### マイグレーションの競合
+
+複数の開発者が同時にマイグレーションを作成した場合：
+
+```bash
+# ローカルのマイグレーションを一度リセット
+bunx prisma migrate reset --skip-seed
+
+# 最新のマイグレーションを取得してから再作成
+git pull origin main
+bunx prisma migrate dev --name your_changes
+```
+
+#### 既存データベースのベースライン設定
+
+`db push` を使用していた既存データベースをマイグレーション管理に移行する場合：
+
+```bash
+# ベースラインマイグレーションを作成（適用はスキップ）
+bunx prisma migrate dev --name initial_baseline --create-only
+
+# 既に適用済みとしてマーク
+bunx prisma migrate resolve --applied [migration_name]
+```
+
 ## 推奨構成
 
-**小規模・個人利用**: Vercel + PlanetScale  
-**中規模・チーム利用**: Railway + Railway PostgreSQL  
+**小規模・個人利用**: Vercel + PlanetScale
+**中規模・チーム利用**: Railway + Railway PostgreSQL
 **大規模・企業利用**: DigitalOcean + Managed PostgreSQL
