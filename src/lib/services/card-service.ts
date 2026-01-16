@@ -12,6 +12,7 @@ export interface CreateCardInput {
   billingDate?: number
   paymentDate?: number
   balance?: number
+  defaultChargeAccountId?: string
   linkedAccountId?: string
   autoTransferEnabled?: boolean
   minBalance?: number
@@ -67,6 +68,20 @@ export class CardService {
       }
     }
 
+    // プリペイドカードのデフォルトチャージ元口座確認
+    if (input.type === 'PREPAID' && input.defaultChargeAccountId) {
+      const defaultChargeAccount = await prisma.appAccount.findFirst({
+        where: {
+          id: input.defaultChargeAccountId,
+          userId,
+        },
+      })
+
+      if (!defaultChargeAccount) {
+        throw new Error('Default charge account not found')
+      }
+    }
+
     // カード作成
     const card = await prisma.card.create({
       data: {
@@ -80,6 +95,7 @@ export class CardService {
         billingDate: input.billingDate,
         paymentDate: input.paymentDate,
         balance: input.balance ? new Decimal(input.balance) : undefined,
+        defaultChargeAccountId: input.defaultChargeAccountId,
         linkedAccountId: input.linkedAccountId,
         autoTransferEnabled: input.autoTransferEnabled || false,
         minBalance: input.minBalance ? new Decimal(input.minBalance) : undefined,

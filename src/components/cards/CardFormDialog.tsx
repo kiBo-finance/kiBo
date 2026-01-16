@@ -33,6 +33,7 @@ interface CreateCardPayload {
   autoTransferEnabled?: boolean
   minBalance?: number
   balance?: number
+  defaultChargeAccountId?: string
   monthlyLimit?: number
   settlementDay?: number
 }
@@ -70,6 +71,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
 
     // プリペイドカード用
     balance: '0',
+    defaultChargeAccountId: '',
 
     // デビットカード用
     linkedAccountId: '',
@@ -114,6 +116,9 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
 
         case 'PREPAID':
           payload.balance = parseFloat(formData.balance)
+          if (formData.defaultChargeAccountId) {
+            payload.defaultChargeAccountId = formData.defaultChargeAccountId
+          }
           break
 
         case 'POSTPAY':
@@ -137,6 +142,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
           billingDate: '',
           paymentDate: '',
           balance: '0',
+          defaultChargeAccountId: '',
           linkedAccountId: '',
           autoTransferEnabled: false,
           minBalance: '',
@@ -297,6 +303,31 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                   value={formData.balance}
                   onChange={(e) => setFormData((prev) => ({ ...prev, balance: e.target.value }))}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="defaultChargeAccount">デフォルトチャージ元口座</Label>
+                <Select
+                  value={formData.defaultChargeAccountId}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, defaultChargeAccountId: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="口座を選択（任意）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts
+                      .filter((account) => account.id !== formData.accountId)
+                      .map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name} ({account.currency})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  チャージ時に自動選択される口座です
+                </p>
               </div>
             </CardContent>
           </Card>

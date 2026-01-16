@@ -319,7 +319,13 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
                 {accounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.name} ({account.currencyRef?.symbol}
-                    {new Intl.NumberFormat('ja-JP').format(account.balance.toNumber())})
+                    {new Intl.NumberFormat('ja-JP').format(
+                      typeof account.balance === 'object' && 'toNumber' in account.balance
+                        ? account.balance.toNumber()
+                        : typeof account.balance === 'string'
+                          ? parseFloat(account.balance)
+                          : account.balance
+                    )})
                   </SelectItem>
                 ))}
               </SelectContent>

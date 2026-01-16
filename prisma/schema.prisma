@@ -161,11 +161,12 @@ model AppAccount {
   currencyRef     Currency     @relation(fields: [currency], references: [code])
   cards           Card[]
   linkedCards     Card[]       @relation("LinkedCardAccount")
+  defaultChargeCards Card[]    @relation("DefaultChargeAccount")
   transactions    Transaction[]
   scheduledTx     ScheduledTransaction[]
   autoTransfersFrom AutoTransfer[] @relation("TransferFromAccount")
   autoTransfersTo   AutoTransfer[] @relation("TransferToAccount")
-  
+
   @@map("app_accounts")
 }
 
@@ -191,7 +192,8 @@ model Card {
   
   // プリペイドカード用
   balance      Decimal? @db.Decimal(15,4) // 現在残高
-  
+  defaultChargeAccountId String? // デフォルトチャージ元口座
+
   // デビットカード用
   linkedAccountId String? // 紐付け銀行口座
   autoTransferEnabled Boolean @default(false) // 自動振替有効
@@ -212,6 +214,7 @@ model Card {
   user         User          @relation(fields: [userId], references: [id])
   account      AppAccount    @relation(fields: [accountId], references: [id])
   linkedAccount AppAccount?  @relation("LinkedCardAccount", fields: [linkedAccountId], references: [id])
+  defaultChargeAccount AppAccount? @relation("DefaultChargeAccount", fields: [defaultChargeAccountId], references: [id])
   transactions Transaction[]
   autoTransfers AutoTransfer[]
   postpayPayments PostpayPayment[]

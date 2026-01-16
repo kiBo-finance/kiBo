@@ -64,13 +64,19 @@ export function CardList() {
     return `•••• •••• •••• ${lastFour}`
   }
 
-  const formatCurrency = (amount: Decimal | null, currency: string) => {
-    if (amount === null) return null
+  const formatCurrency = (amount: Decimal | number | string | null, currency: string) => {
+    if (amount === null || amount === undefined) return null
     const formatter = new Intl.NumberFormat('ja-JP', {
       style: 'currency',
       currency: currency,
     })
-    return formatter.format(amount.toNumber())
+    // Handle Decimal objects, numbers, and strings
+    const numValue = typeof amount === 'object' && 'toNumber' in amount
+      ? amount.toNumber()
+      : typeof amount === 'string'
+        ? parseFloat(amount)
+        : amount
+    return formatter.format(numValue)
   }
 
   if (loading) {

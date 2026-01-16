@@ -110,13 +110,18 @@ export function TransactionsClient() {
     setEditingScheduledTransaction(null)
   }
 
-  const formatAmount = (amount: Decimal) => {
+  const formatAmount = (amount: Decimal | number | string) => {
+    const numValue = typeof amount === 'object' && 'toNumber' in amount
+      ? amount.toNumber()
+      : typeof amount === 'string'
+        ? parseFloat(amount)
+        : amount
     return new Intl.NumberFormat('ja-JP', {
       style: 'currency',
       currency: 'JPY',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount.toNumber())
+    }).format(numValue)
   }
 
   if (loading) {
