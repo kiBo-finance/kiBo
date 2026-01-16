@@ -194,7 +194,7 @@ function SelectItem({ className, children, value, id, disabled, isDisabled, text
       textValue={derivedTextValue}
       className={composeRenderProps(className, (className) =>
         cn(
-          'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-blue-50 focus:text-blue-900 hover:bg-gray-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-blue-600 dark:focus:text-white dark:hover:bg-gray-600',
+          'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-primary focus:text-primary-foreground hover:bg-secondary data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
           className
         )
       )}
