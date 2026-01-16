@@ -10,9 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { accountsAtom } from '@/lib/atoms/accounts'
+import { accountsAtom, cardsAtom } from '@/lib/atoms/accounts'
+import { transactionsAtom, type Transaction } from '@/lib/atoms/transactions'
 import { cn } from '@/lib/utils'
-import { formatCurrency, createCurrencyAmount } from '@/lib/utils/currency'
+import { createCurrencyAmount } from '@/lib/utils/currency'
 import { useAtomValue } from 'jotai'
 import {
   CreditCard,
@@ -30,6 +31,7 @@ import {
   EyeOff,
 } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'waku/router/client'
 
 interface AccountDetailsProps {
   accountId: string
@@ -62,8 +64,19 @@ export function AccountDetails({
 }: AccountDetailsProps) {
   const [balanceVisible, setBalanceVisible] = useState(true)
   const accounts = useAtomValue(accountsAtom)
+  const cards = useAtomValue(cardsAtom)
+  const transactions = useAtomValue(transactionsAtom)
 
   const account = accounts.find((acc) => acc.id === accountId)
+
+  // この口座に関連するカードを取得
+  const accountCards = cards.filter((card) => card.accountId === accountId)
+
+  // この口座の最近の取引を取得（最大5件）
+  const accountTransactions = transactions
+    .filter((tx) => tx.accountId === accountId)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
 
   if (!account) {
     return (
@@ -252,39 +265,111 @@ export function AccountDetails({
           </div>
         </div>
 
-        {/* 関連カード情報（TODO: カードが実装されたら） */}
-        {/* {account.cards && account.cards.length > 0 && (
+        {/* 関連カード情報 */}
+        {accountCards.length > 0 && (
           <div>
-            <h3 className="font-medium mb-3">関連カード</h3>
+            <h3 className="mb-3 font-medium">関連カード</h3>
             <div className="space-y-2">
-              {account.cards.map((card) => (
-                <div key={card.id} className="flex items-center justify-between p-2 rounded border">
+              {accountCards.map((card) => (
+                <div
+                  key={card.id}
+                  className="flex items-center justify-between rounded border p-2 dark:border-gray-600"
+                >
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
                     <span>{card.name}</span>
                     <Badge variant="outline" className="text-xs">
-                      {card.type}
+                      {card.type === 'CREDIT'
+                        ? 'クレジット'
+                        : card.type === 'DEBIT'
+                          ? 'デビット'
+                          : card.type === 'PREPAID'
+                            ? 'プリペイド'
+                            : 'ポストペイ'}
                     </Badge>
+                    {card.brand && (
+                      <Badge variant="secondary" className="text-xs">
+                        {card.brand}
+                      </Badge>
+                    )}
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    ****{card.lastFourDigits}
-                  </span>
+                  <span className="text-sm text-muted-foreground">****{card.lastFourDigits}</span>
                 </div>
               ))}
             </div>
           </div>
-        )} */}
+        )}
 
-        {/* 取引履歴（TODO: 取引が実装されたら） */}
+        {/* 取引履歴 */}
         {showTransactions && (
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-medium">最近の取引</h3>
-              <Button variant="ghost" size="sm">
-                すべて表示
-              </Button>
+              <Link to={`/dashboard/transactions?accountId=${accountId}` as any}>
+                <Button variant="ghost" size="sm">
+                  すべて表示
+                </Button>
+              </Link>
             </div>
-            <div className="py-8 text-center text-muted-foreground">取引履歴はまだありません</div>
+            {accountTransactions.length > 0 ? (
+              <div className="space-y-2">
+                {accountTransactions.map((tx) => {
+                  const txAmount = createCurrencyAmount(tx.amount, tx.currency)
+                  const isIncome = tx.type === 'INCOME'
+                  const isExpense = tx.type === 'EXPENSE'
+
+                  return (
+                    <div
+                      key={tx.id}
+                      className="flex items-center justify-between rounded border p-3 dark:border-gray-600"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            'rounded-full p-2',
+                            isIncome
+                              ? 'bg-green-100 dark:bg-green-900/50'
+                              : isExpense
+                                ? 'bg-red-100 dark:bg-red-900/50'
+                                : 'bg-blue-100 dark:bg-blue-900/50'
+                          )}
+                        >
+                          {isIncome ? (
+                            <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          ) : isExpense ? (
+                            <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          ) : (
+                            <CreditCard className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium">{tx.description}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(tx.date).toLocaleDateString('ja-JP')}
+                            {tx.category && ` • ${tx.category.name}`}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={cn(
+                          'font-medium',
+                          isIncome
+                            ? 'text-green-600 dark:text-green-400'
+                            : isExpense
+                              ? 'text-red-600 dark:text-red-400'
+                              : ''
+                        )}
+                      >
+                        {isIncome ? '+' : isExpense ? '-' : ''}
+                        {txAmount.format()}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">取引履歴はまだありません</div>
+            )}
           </div>
         )}
       </CardContent>
