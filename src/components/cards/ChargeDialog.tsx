@@ -279,7 +279,11 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
                         口座
                       </SelectLabel>
                       {accounts.map((account) => (
-                        <SelectItem key={`account:${account.id}`} value={`account:${account.id}`}>
+                        <SelectItem
+                          key={`account:${account.id}`}
+                          value={`account:${account.id}`}
+                          textValue={`${account.name} (${formatCurrency(account.balance, account.currency)})`}
+                        >
                           {account.name} ({formatCurrency(account.balance, account.currency)})
                         </SelectItem>
                       ))}
@@ -292,7 +296,11 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
                         プリペイドカード
                       </SelectLabel>
                       {cards.map((c) => (
-                        <SelectItem key={`card:${c.id}`} value={`card:${c.id}`}>
+                        <SelectItem
+                          key={`card:${c.id}`}
+                          value={`card:${c.id}`}
+                          textValue={`${c.name} •${c.lastFourDigits} (${formatCurrency(c.balance, c.account.currency)})`}
+                        >
                           {c.name} •{c.lastFourDigits} ({formatCurrency(c.balance, c.account.currency)})
                         </SelectItem>
                       ))}

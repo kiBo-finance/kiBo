@@ -240,7 +240,11 @@ export function ScheduledCreateClient() {
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
+                    <SelectItem
+                      key={account.id}
+                      value={account.id}
+                      textValue={`${account.name} (${account.currency})`}
+                    >
                       {account.name} ({account.currency})
                     </SelectItem>
                   ))}

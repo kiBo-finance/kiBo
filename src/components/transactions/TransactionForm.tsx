@@ -246,7 +246,11 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
                 </SelectTrigger>
                 <SelectContent>
                   {currencies.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
+                    <SelectItem
+                      key={currency.code}
+                      value={currency.code}
+                      textValue={`${currency.symbol} ${currency.code}`}
+                    >
                       {currency.symbol} {currency.code}
                     </SelectItem>
                   ))}
@@ -316,18 +320,20 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
                 <SelectValue placeholder="口座を選択" />
               </SelectTrigger>
               <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.name} ({account.currencyRef?.symbol}
-                    {new Intl.NumberFormat('ja-JP').format(
-                      typeof account.balance === 'object' && 'toNumber' in account.balance
-                        ? account.balance.toNumber()
-                        : typeof account.balance === 'string'
-                          ? parseFloat(account.balance)
-                          : account.balance
-                    )})
-                  </SelectItem>
-                ))}
+                {accounts.map((account) => {
+                  const balanceNum =
+                    typeof account.balance === 'object' && 'toNumber' in account.balance
+                      ? account.balance.toNumber()
+                      : typeof account.balance === 'string'
+                        ? parseFloat(account.balance)
+                        : account.balance
+                  const displayText = `${account.name} (${account.currencyRef?.symbol || ''}${new Intl.NumberFormat('ja-JP').format(balanceNum)})`
+                  return (
+                    <SelectItem key={account.id} value={account.id} textValue={displayText}>
+                      {displayText}
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           </div>

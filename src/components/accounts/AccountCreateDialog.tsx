@@ -266,6 +266,7 @@ export function AccountCreateDialog({
                               key={currency.code}
                               value={currency.code}
                               className="cursor-pointer"
+                              textValue={`${currency.symbol} ${currency.code} ${currency.name}`}
                             >
                               <div className="flex items-center gap-2">
                                 <span className="font-mono text-sm">{currency.symbol}</span>
