@@ -73,9 +73,6 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "prisma": {
-    "seed": "bun prisma/seed.ts"
-  },
   "trustedDependencies": [
     "@tailwindcss/oxide",
     "unrs-resolver"
