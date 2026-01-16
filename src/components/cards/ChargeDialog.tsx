@@ -278,7 +278,7 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
                         <Wallet size={14} />
                         口座
                       </SelectLabel>
-                      {accounts.map((account) => (
+                      {accounts?.map((account) => (
                         <SelectItem
                           key={`account:${account.id}`}
                           value={`account:${account.id}`}
@@ -295,7 +295,7 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
                         <CreditCard size={14} />
                         プリペイドカード
                       </SelectLabel>
-                      {cards.map((c) => (
+                      {cards?.map((c) => (
                         <SelectItem
                           key={`card:${c.id}`}
                           value={`card:${c.id}`}

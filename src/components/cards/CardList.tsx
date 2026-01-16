@@ -102,7 +102,7 @@ export function CardList() {
         </Button>
       </div>
 
-      {cards.length === 0 ? (
+      {!cards || cards.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <CreditCard size={48} className="mb-4 text-muted-foreground" />

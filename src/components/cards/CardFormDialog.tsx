@@ -259,7 +259,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                   </SelectTrigger>
                   <SelectContent>
                     {accounts
-                      .filter((account) => account.id !== formData.accountId)
+                      ?.filter((account) => account.id !== formData.accountId)
                       .map((account) => (
                         <SelectItem
                           key={account.id}
@@ -330,7 +330,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                     <SelectValue placeholder="口座を選択（任意）" />
                   </SelectTrigger>
                   <SelectContent>
-                    {accounts.map((account) => (
+                    {accounts?.map((account) => (
                       <SelectItem
                         key={account.id}
                         value={account.id}
@@ -486,7 +486,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                     <SelectValue placeholder="口座を選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    {accounts.map((account) => (
+                    {accounts?.map((account) => (
                       <SelectItem
                         key={account.id}
                         value={account.id}

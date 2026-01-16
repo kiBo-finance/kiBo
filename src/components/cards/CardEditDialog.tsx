@@ -252,7 +252,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
                   </SelectTrigger>
                   <SelectContent>
                     {accounts
-                      .filter((account) => account.id !== card.accountId)
+                      ?.filter((account) => account.id !== card.accountId)
                       .map((account) => (
                         <SelectItem
                           key={account.id}
@@ -330,7 +330,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">なし</SelectItem>
-                    {accounts.map((account) => (
+                    {accounts?.map((account) => (
                       <SelectItem
                         key={account.id}
                         value={account.id}
