@@ -383,9 +383,9 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
                 <SelectValue placeholder="カテゴリを選択（任意）" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">なし</SelectItem>
+                <SelectItem value="" textValue="なし">なし</SelectItem>
                 {filteredCategories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.id} textValue={category.name}>
                     {category.name}
                   </SelectItem>
                 ))}

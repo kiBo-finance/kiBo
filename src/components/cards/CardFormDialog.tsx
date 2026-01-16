@@ -429,7 +429,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                 </SelectTrigger>
                 <SelectContent>
                   {CARD_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
+                    <SelectItem key={type.value} value={type.value} textValue={type.label}>
                       {type.label}
                     </SelectItem>
                   ))}
@@ -450,7 +450,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                 </SelectTrigger>
                 <SelectContent>
                   {CARD_BRANDS.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
+                    <SelectItem key={brand} value={brand} textValue={brand}>
                       {brand}
                     </SelectItem>
                   ))}

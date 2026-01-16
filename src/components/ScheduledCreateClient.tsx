@@ -181,9 +181,9 @@ export function ScheduledCreateClient() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="INCOME">収入</SelectItem>
-                  <SelectItem value="EXPENSE">支出</SelectItem>
-                  <SelectItem value="TRANSFER">振替</SelectItem>
+                  <SelectItem value="INCOME" textValue="収入">収入</SelectItem>
+                  <SelectItem value="EXPENSE" textValue="支出">支出</SelectItem>
+                  <SelectItem value="TRANSFER" textValue="振替">振替</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -209,9 +209,9 @@ export function ScheduledCreateClient() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="JPY">JPY</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="JPY" textValue="JPY">JPY</SelectItem>
+                    <SelectItem value="USD" textValue="USD">USD</SelectItem>
+                    <SelectItem value="EUR" textValue="EUR">EUR</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -265,7 +265,7 @@ export function ScheduledCreateClient() {
                 </SelectTrigger>
                 <SelectContent>
                   {filteredCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.id} value={category.id} textValue={category.name}>
                       {category.name}
                     </SelectItem>
                   ))}
@@ -325,10 +325,10 @@ export function ScheduledCreateClient() {
                       <SelectValue placeholder="間隔を選択" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="DAILY">毎日</SelectItem>
-                      <SelectItem value="WEEKLY">毎週</SelectItem>
-                      <SelectItem value="MONTHLY">毎月</SelectItem>
-                      <SelectItem value="YEARLY">毎年</SelectItem>
+                      <SelectItem value="DAILY" textValue="毎日">毎日</SelectItem>
+                      <SelectItem value="WEEKLY" textValue="毎週">毎週</SelectItem>
+                      <SelectItem value="MONTHLY" textValue="毎月">毎月</SelectItem>
+                      <SelectItem value="YEARLY" textValue="毎年">毎年</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -360,10 +360,10 @@ export function ScheduledCreateClient() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">当日</SelectItem>
-                  <SelectItem value="1">1日前</SelectItem>
-                  <SelectItem value="3">3日前</SelectItem>
-                  <SelectItem value="7">1週間前</SelectItem>
+                  <SelectItem value="0" textValue="当日">当日</SelectItem>
+                  <SelectItem value="1" textValue="1日前">1日前</SelectItem>
+                  <SelectItem value="3" textValue="3日前">3日前</SelectItem>
+                  <SelectItem value="7" textValue="1週間前">1週間前</SelectItem>
                 </SelectContent>
               </Select>
             </div>

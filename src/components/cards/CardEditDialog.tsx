@@ -450,7 +450,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
                 </SelectTrigger>
                 <SelectContent>
                   {CARD_BRANDS.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
+                    <SelectItem key={brand} value={brand} textValue={brand}>
                       {brand}
                     </SelectItem>
                   ))}
