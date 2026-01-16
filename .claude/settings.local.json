@@ -71,7 +71,8 @@
       "mcp__serena__find_symbol",
       "Bash(xargs:*)",
       "WebFetch(domain:react-spectrum.adobe.com)",
-      "WebFetch(domain:react-aria.adobe.com)"
+      "WebFetch(domain:react-aria.adobe.com)",
+      "Bash(gh pr list:*)"
     ],
     "deny": []
   }
