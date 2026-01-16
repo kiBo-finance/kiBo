@@ -1,8 +1,8 @@
 'use client'
 
-import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { recentTransactionsAtom } from '../../lib/atoms/transactions'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { recentTransactionsAtom } from '@/lib/atoms/transactions'
 import { useAtomValue } from 'jotai'
 import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight } from 'lucide-react'
 import { Link } from 'waku/router/client'

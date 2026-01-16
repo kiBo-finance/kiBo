@@ -1,7 +1,7 @@
 'use client'
 
-import { authClient } from '../../lib/auth-client'
-import type { User } from '../../lib/types/auth'
+import { authClient } from '@/lib/auth-client'
+import type { User } from '@/lib/types/auth'
 import { createContext, useContext, useEffect, useState } from 'react'
 
 interface Session {

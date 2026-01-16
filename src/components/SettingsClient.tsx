@@ -1,18 +1,18 @@
 'use client'
 
-import { CurrencySelect } from './currency/CurrencySelect'
-import { ExchangeRatesList } from './currency/ExchangeRatesList'
-import { Button } from './ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Label } from './ui/label'
+import { CurrencySelect } from '@/components/currency/CurrencySelect'
+import { ExchangeRatesList } from '@/components/currency/ExchangeRatesList'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './ui/select'
-import { Switch } from './ui/switch'
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   currenciesAtom,
   baseCurrencyAtom,
@@ -20,7 +20,7 @@ import {
   exchangeRatesAtom,
   setExchangeRateUpdateTimeAtom,
   currencyFormatPreferencesAtom,
-} from '../lib/atoms/currency'
+} from '@/lib/atoms/currency'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { Settings, Globe, RefreshCw, Bell, ExternalLink } from 'lucide-react'
 import { Link } from 'waku/router/client'

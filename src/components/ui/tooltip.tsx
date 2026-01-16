@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '../../lib/utils'
+import { cn } from '@/lib/utils'
 import {
   TooltipTrigger as AriaTooltipTrigger,
   Tooltip as AriaTooltip,

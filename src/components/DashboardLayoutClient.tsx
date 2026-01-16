@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react'
 import { Link } from 'waku/router/client'
-import { AppHeader } from './layout/AppHeader'
-import { useAuth } from './providers/AuthProvider'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { Toaster } from 'sonner'
 
 type DashboardLayoutClientProps = { children: ReactNode }

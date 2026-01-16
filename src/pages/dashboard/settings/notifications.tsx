@@ -1,4 +1,4 @@
-import { NotificationsSettingsClient } from '../../../components/NotificationsSettingsClient'
+import { NotificationsSettingsClient } from '@/components/NotificationsSettingsClient'
 
 export default function NotificationsSettingsPage() {
   return <NotificationsSettingsClient />

@@ -1,4 +1,4 @@
-import { AccountsNewClient } from '../../../components/AccountsNewClient'
+import { AccountsNewClient } from '@/components/AccountsNewClient'
 
 export default function AccountsNewPage() {
   return <AccountsNewClient />

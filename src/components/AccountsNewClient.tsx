@@ -1,8 +1,8 @@
 'use client'
 
-import { CreateAccountForm } from './accounts/CreateAccountForm'
-import { Button } from './ui/button'
-import { currenciesAtom } from '../lib/atoms/currency'
+import { CreateAccountForm } from '@/components/accounts/CreateAccountForm'
+import { Button } from '@/components/ui/button'
+import { currenciesAtom } from '@/lib/atoms/currency'
 import { useSetAtom } from 'jotai'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'waku/router/client'

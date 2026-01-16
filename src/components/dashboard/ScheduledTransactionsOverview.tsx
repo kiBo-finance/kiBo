@@ -1,9 +1,9 @@
 'use client'
 
-import { ScheduledTransactionCard } from '../scheduled/ScheduledTransactionCard'
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { ScheduledTransactionCard } from '@/components/scheduled/ScheduledTransactionCard'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Clock, AlertTriangle, ArrowRight } from 'lucide-react'
 import { Link } from 'waku/router/client'
 import { useEffect, useState } from 'react'

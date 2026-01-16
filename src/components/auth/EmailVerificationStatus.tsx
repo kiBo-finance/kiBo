@@ -1,8 +1,8 @@
 'use client'
 
-import { Button } from '../ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
-import { authClient } from '../../lib/auth-client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { authClient } from '@/lib/auth-client'
 import { useState } from 'react'
 
 interface EmailVerificationStatusProps {

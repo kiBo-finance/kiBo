@@ -1,9 +1,9 @@
 'use client'
 
 import { Navigation } from './Navigation'
-import { Button } from '../ui/button'
-import { SyncIndicator } from '../ui/sync-status'
-import { useAuth } from '../../lib/hooks/useAuth'
+import { Button } from '@/components/ui/button'
+import { SyncIndicator } from '@/components/ui/sync-status'
+import { useAuth } from '@/lib/hooks/useAuth'
 import { User, Menu, X, LogOut } from 'lucide-react'
 import { Link, useRouter } from 'waku/router/client'
 import { useState, useEffect } from 'react'

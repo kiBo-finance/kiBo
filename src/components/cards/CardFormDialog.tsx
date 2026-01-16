@@ -1,21 +1,21 @@
 'use client'
 
-import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Checkbox } from '../ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
-import { Separator } from '../ui/separator'
-import { useAccounts } from '../../lib/hooks/useAccounts'
-import { useCards } from '../../lib/hooks/useCards'
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { useAccounts } from '@/lib/hooks/useAccounts'
+import { useCards } from '@/lib/hooks/useCards'
 import type { CardType } from '@prisma/client'
 import { useState, useEffect } from 'react'
 

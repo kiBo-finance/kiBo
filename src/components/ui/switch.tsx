@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '../../lib/utils'
+import { cn } from '@/lib/utils'
 import { Switch as AriaSwitch, composeRenderProps } from 'react-aria-components'
 import * as React from 'react'
 

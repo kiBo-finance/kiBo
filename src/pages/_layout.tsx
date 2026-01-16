@@ -1,11 +1,11 @@
 import '../styles.css'
 
 import type { ReactNode } from 'react'
-import { AuthProvider } from '../components/providers/AuthProvider'
-import { JotaiProvider } from '../components/providers/JotaiProvider'
-import { ThemeProvider } from '../components/providers/ThemeProvider'
-import { ServiceWorkerProvider } from '../components/providers/ServiceWorkerProvider'
-import { OfflineIndicator } from '../components/ui/offline-indicator'
+import { AuthProvider } from '@/components/providers/AuthProvider'
+import { JotaiProvider } from '@/components/providers/JotaiProvider'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { ServiceWorkerProvider } from '@/components/providers/ServiceWorkerProvider'
+import { OfflineIndicator } from '@/components/ui/offline-indicator'
 
 type RootLayoutProps = { children: ReactNode }
 

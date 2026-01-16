@@ -1,6 +1,6 @@
 'use client'
 
-import { AccountDetails } from './accounts/AccountDetails'
+import { AccountDetails } from '@/components/accounts/AccountDetails'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,10 +10,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from './ui/alert-dialog'
-import { Button } from './ui/button'
-import { accountsAtom, removeAccountAtom } from '../lib/atoms/accounts'
-import { currenciesAtom } from '../lib/atoms/currency'
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { accountsAtom, removeAccountAtom } from '@/lib/atoms/accounts'
+import { currenciesAtom } from '@/lib/atoms/currency'
 import type { Transaction } from '@prisma/client'
 import { useSetAtom, useAtomValue } from 'jotai'
 import { ArrowLeft } from 'lucide-react'

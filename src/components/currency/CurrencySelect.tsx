@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '../ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -8,10 +8,10 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '../ui/command'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
-import { activeCurrenciesAtom, recentCurrenciesAtom, currencyMapAtom } from '../../lib/atoms/currency'
-import { cn } from '../../lib/utils'
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { activeCurrenciesAtom, recentCurrenciesAtom, currencyMapAtom } from '@/lib/atoms/currency'
+import { cn } from '@/lib/utils'
 import { useAtomValue } from 'jotai'
 import { Check, ChevronDown, Search } from 'lucide-react'
 import { useState } from 'react'

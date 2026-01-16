@@ -1,17 +1,17 @@
 'use client'
 
-import { Button } from '../ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
-import { Textarea } from '../ui/textarea'
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import type { Card, CardType } from '@prisma/client'
 import type { Decimal } from 'decimal.js'
 import { useState, useEffect } from 'react'

@@ -1,4 +1,4 @@
-import { ScheduledEditClient } from '../../../../components/ScheduledEditClient'
+import { ScheduledEditClient } from '@/components/ScheduledEditClient'
 
 export default function ScheduledEditPage({ id }: { id: string }) {
   return <ScheduledEditClient id={id} />

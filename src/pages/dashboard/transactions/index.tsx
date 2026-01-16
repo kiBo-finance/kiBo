@@ -1,4 +1,4 @@
-import { TransactionsClient } from '../../../components/TransactionsClient'
+import { TransactionsClient } from '@/components/TransactionsClient'
 
 export default function TransactionsPage() {
   return <TransactionsClient />

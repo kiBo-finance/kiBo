@@ -2,19 +2,19 @@
 
 import { Link, useRouter } from 'waku/router/client'
 import { useState } from 'react'
-import { signIn } from '../lib/auth-client'
+import { signIn } from '@/lib/auth-client'
 
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from './ui/card'
-import { Input } from './ui/input'
-import { Label } from './ui/label'
-import { ThemeToggle } from './ui/theme-toggle'
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export function LoginClient() {
   const router = useRouter()

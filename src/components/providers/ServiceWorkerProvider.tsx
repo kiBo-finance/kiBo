@@ -8,8 +8,8 @@ import {
   isOnline as checkOnline,
   type SyncResult,
   type SyncStatus,
-} from '../../lib/sync-service'
-import { getPendingCount } from '../../lib/offline-store'
+} from '@/lib/sync-service'
+import { getPendingCount } from '@/lib/offline-store'
 
 interface ServiceWorkerContextValue {
   isOnline: boolean

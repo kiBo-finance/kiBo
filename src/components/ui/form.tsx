@@ -1,7 +1,7 @@
 'use client'
 
 import { Label } from './label'
-import { cn } from '../../lib/utils'
+import { cn } from '@/lib/utils'
 import * as React from 'react'
 import {
   Controller,

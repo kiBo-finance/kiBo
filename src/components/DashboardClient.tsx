@@ -1,18 +1,18 @@
 'use client'
 
-import { AccountCreateDialog } from './accounts/AccountCreateDialog'
-import { AccountsList } from './accounts/AccountsList'
-import { CurrencyConverter } from './currency/CurrencyConverter'
-import { ExchangeRatesList } from './currency/ExchangeRatesList'
-import { OverviewCards } from './dashboard/OverviewCards'
-import { ScheduledTransactionsOverview } from './dashboard/ScheduledTransactionsOverview'
+import { AccountCreateDialog } from '@/components/accounts/AccountCreateDialog'
+import { AccountsList } from '@/components/accounts/AccountsList'
+import { CurrencyConverter } from '@/components/currency/CurrencyConverter'
+import { ExchangeRatesList } from '@/components/currency/ExchangeRatesList'
+import { OverviewCards } from '@/components/dashboard/OverviewCards'
+import { ScheduledTransactionsOverview } from '@/components/dashboard/ScheduledTransactionsOverview'
 import {
   currenciesAtom,
   exchangeRatesAtom,
   setExchangeRateUpdateTimeAtom,
-} from '../lib/atoms/currency'
-import { useAccounts } from '../lib/hooks/useAccounts'
-import { useCards } from '../lib/hooks/useCards'
+} from '@/lib/atoms/currency'
+import { useAccounts } from '@/lib/hooks/useAccounts'
+import { useCards } from '@/lib/hooks/useCards'
 import type { AppAccount } from '@prisma/client'
 import { useSetAtom } from 'jotai'
 import { useEffect } from 'react'
