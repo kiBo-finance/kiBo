@@ -10,6 +10,27 @@ const config: Config = {
   // See https://vite.dev/guide/api-environment-plugins.html
   vite: {
     plugins: [tsconfigPaths({ root: __dirname })],
+    // Custom logger to suppress sourcemap warnings for "use client" directives
+    customLogger: {
+      info: console.info,
+      warn: (msg: string) => {
+        // Suppress sourcemap resolution warnings for "use client" directives
+        if (msg.includes("Can't resolve original location of error")) {
+          return
+        }
+        console.warn(msg)
+      },
+      warnOnce: (msg: string) => {
+        if (msg.includes("Can't resolve original location of error")) {
+          return
+        }
+        console.warn(msg)
+      },
+      error: console.error,
+      clearScreen: () => {},
+      hasErrorLogged: () => false,
+      hasWarned: false,
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
@@ -20,12 +41,18 @@ const config: Config = {
       allowedHosts: process.env.ALLOWED_HOSTS ? process.env.ALLOWED_HOSTS.split(',') : true,
     },
     build: {
+      // Disable sourcemaps in production to avoid sourcemap warnings
+      sourcemap: false,
       rollupOptions: {
         // Externalize Prisma - it's handled by prisma-resolver-hook.mjs
         external: ['@prisma/client', /^@prisma\/.*/, /^\.prisma\/.*/],
         onwarn(warning, warn) {
           // Suppress Prisma external dependency warnings
           if (warning.code === 'UNRESOLVED_IMPORT' && warning.exporter?.includes('.prisma')) {
+            return
+          }
+          // Suppress "use client" directive warnings (handled by Waku/RSC)
+          if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.message.includes('use client')) {
             return
           }
           warn(warning)

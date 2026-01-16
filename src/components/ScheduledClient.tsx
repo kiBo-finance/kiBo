@@ -41,7 +41,9 @@ export function ScheduledClient() {
     try {
       const response = await fetch('/api/scheduled-transactions')
       if (response.ok) {
-        const data = await response.json()
+        const result = await response.json()
+        // API returns { success, data, pagination }, extract the data array
+        const data = Array.isArray(result) ? result : result.data || []
         setScheduledTransactions(data)
       }
     } catch (error) {

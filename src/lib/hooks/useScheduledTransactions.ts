@@ -62,7 +62,9 @@ export function useScheduledTransactions() {
         })
 
         if (response.ok) {
-          const newTransaction = await response.json()
+          const result = await response.json()
+          // API returns { success, data }, extract the data
+          const newTransaction = result.data || result
           setTransactions((prev) => [...prev, newTransaction])
           return { success: true, data: newTransaction }
         } else {
