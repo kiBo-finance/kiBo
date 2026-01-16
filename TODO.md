@@ -13,7 +13,7 @@
 ~~better-authの認証方式を拡張します。~~ → **実装完了**
 
 - パスキー認証（WebAuthn/FIDO2）対応を追加
-- Google/GitHub OAuth対応を追加（環境変数設定で有効化）
+- Google/GitHub/Discord OAuth対応を追加（環境変数設定で有効化）
 - Passkeyモデルをスキーマに追加
 - クライアント側にpasskeyClient追加
 
