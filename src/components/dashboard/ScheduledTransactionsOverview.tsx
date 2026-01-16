@@ -39,7 +39,9 @@ export function ScheduledTransactionsOverview() {
     try {
       const response = await fetch('/api/scheduled-transactions')
       if (response.ok) {
-        const transactions = await response.json()
+        const result = await response.json()
+        // API returns { success, data, pagination }, extract the data array
+        const transactions = Array.isArray(result) ? result : result.data || []
 
         const now = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())

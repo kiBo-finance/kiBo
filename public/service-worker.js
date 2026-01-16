@@ -3,7 +3,7 @@
  * Provides offline support and caching strategies for the PWA
  */
 
-const CACHE_VERSION = 'v3'
+const CACHE_VERSION = 'v4'
 const STATIC_CACHE_NAME = `kibo-static-${CACHE_VERSION}`
 const API_CACHE_NAME = `kibo-api-${CACHE_VERSION}`
 const OFFLINE_DB_NAME = 'kibo-offline'
@@ -12,11 +12,10 @@ const OFFLINE_STORE_NAME = 'pendingTransactions'
 // Static assets to cache on install
 const STATIC_ASSETS = [
   '/',
-  '/offline.html',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
-  '/icons/apple-touch-icon.png',
+  '/apple-touch-icon.png',
 ]
 
 // API routes that should use network-first strategy
