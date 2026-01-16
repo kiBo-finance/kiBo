@@ -118,7 +118,8 @@ export function ScheduledEditClient({ id }: ScheduledEditClientProps) {
     try {
       const response = await fetch('/api/accounts')
       if (response.ok) {
-        const data = await response.json()
+        const json = await response.json()
+        const data = json.success ? json.data : json
         setAccounts(data)
       }
     } catch (error) {

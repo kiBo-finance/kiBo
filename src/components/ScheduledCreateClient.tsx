@@ -60,7 +60,8 @@ export function ScheduledCreateClient() {
     try {
       const response = await fetch('/api/accounts')
       if (response.ok) {
-        const data = await response.json()
+        const json = await response.json()
+        const data = json.success ? json.data : json
         setAccounts(data)
         // デフォルトで最初の口座を選択
         if (data.length > 0 && !formData.accountId) {
