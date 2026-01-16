@@ -14,7 +14,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { accountsAtom, removeAccountAtom } from '@/lib/atoms/accounts'
 import { currenciesAtom } from '@/lib/atoms/currency'
-import type { Transaction } from '@prisma/client'
 import { useSetAtom, useAtomValue } from 'jotai'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'waku/router/client'
@@ -125,7 +124,7 @@ export function AccountDetailClient({ id }: AccountDetailClientProps) {
               {account?.name} を削除します。
               {account &&
               'transactions' in account &&
-              (account as { transactions?: Transaction[] }).transactions?.length ? (
+              (account as { transactions?: unknown[] }).transactions?.length ? (
                 <span className="text-orange-600 dark:text-orange-400">
                   この口座には取引履歴があるため、非アクティブ化されます。
                 </span>
