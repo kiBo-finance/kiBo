@@ -95,6 +95,10 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
   // プリペイドカードかどうかのフラグ
   const isPrepaid = formData.type === 'PREPAID'
 
+  // 選択された口座の通貨を取得
+  const selectedAccountCurrency = accounts?.find((a) => a.id === formData.accountId)?.currency || 'JPY'
+  const isJPY = selectedAccountCurrency === 'JPY'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -185,7 +189,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                 <Input
                   id="creditLimit"
                   type="number"
-                  step="0.01"
+                  step={isJPY ? '1' : '0.01'}
                   value={formData.creditLimit}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, creditLimit: e.target.value }))
@@ -288,7 +292,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                   <Input
                     id="minBalance"
                     type="number"
-                    step="0.01"
+                    step={isJPY ? '1' : '0.01'}
                     value={formData.minBalance}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, minBalance: e.target.value }))
@@ -313,7 +317,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                 <Input
                   id="balance"
                   type="number"
-                  step="0.01"
+                  step={isJPY ? '1' : '0.01'}
                   value={formData.balance}
                   onChange={(e) => setFormData((prev) => ({ ...prev, balance: e.target.value }))}
                 />
@@ -361,7 +365,7 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                 <Input
                   id="monthlyLimit"
                   type="number"
-                  step="0.01"
+                  step={isJPY ? '1' : '0.01'}
                   value={formData.monthlyLimit}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, monthlyLimit: e.target.value }))

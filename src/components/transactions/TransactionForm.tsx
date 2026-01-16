@@ -260,12 +260,12 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
               <Input
                 id="amount"
                 type="number"
-                step="0.01"
+                step={formData.currency === 'JPY' ? '1' : '0.01'}
                 value={formData.amount || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })
                 }
-                placeholder="0.00"
+                placeholder={formData.currency === 'JPY' ? '0' : '0.00'}
                 required
               />
             </div>

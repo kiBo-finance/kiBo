@@ -321,12 +321,12 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
             <Input
               id="amount"
               type="number"
-              step="0.01"
-              min="0.01"
+              step={(card?.account?.currency || 'JPY') === 'JPY' ? '1' : '0.01'}
+              min={(card?.account?.currency || 'JPY') === 'JPY' ? '1' : '0.01'}
               max={selectedBalance || undefined}
               value={formData.amount}
               onChange={(e) => setFormData((prev) => ({ ...prev, amount: e.target.value }))}
-              placeholder="0.00"
+              placeholder={(card?.account?.currency || 'JPY') === 'JPY' ? '0' : '0.00'}
               required
             />
             {formData.amount && (

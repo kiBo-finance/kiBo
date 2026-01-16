@@ -178,12 +178,12 @@ export function PaymentDialog({ card, open, onOpenChange, onSuccess }: PaymentDi
             <Input
               id="amount"
               type="number"
-              step="0.01"
+              step={formData.currency === 'JPY' ? '1' : '0.01'}
               min="0"
               max={availableAmount?.toString()}
               value={formData.amount}
               onChange={(e) => setFormData((prev) => ({ ...prev, amount: e.target.value }))}
-              placeholder="0.00"
+              placeholder={formData.currency === 'JPY' ? '0' : '0.00'}
               required
             />
             {formData.amount && (

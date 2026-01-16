@@ -195,8 +195,8 @@ export function ScheduledCreateClient() {
                 <Input
                   id="amount"
                   type="number"
-                  step="0.01"
-                  placeholder="0.00"
+                  step={formData.currency === 'JPY' ? '1' : '0.01'}
+                  placeholder={formData.currency === 'JPY' ? '0' : '0.00'}
                   value={formData.amount}
                   onChange={(e) => handleInputChange('amount', e.target.value)}
                   required

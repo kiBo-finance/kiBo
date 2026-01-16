@@ -97,6 +97,9 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
     }
   }, [card, open])
 
+  // カードの口座通貨がJPYかどうか
+  const isJPY = card?.account?.currency === 'JPY'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!card) return
@@ -179,7 +182,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
                 <Input
                   id="creditLimit"
                   type="number"
-                  step="0.01"
+                  step={isJPY ? '1' : '0.01'}
                   value={formData.creditLimit}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, creditLimit: e.target.value }))
@@ -281,7 +284,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
                   <Input
                     id="minBalance"
                     type="number"
-                    step="0.01"
+                    step={isJPY ? '1' : '0.01'}
                     value={formData.minBalance}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, minBalance: e.target.value }))
@@ -306,7 +309,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
                 <Input
                   id="balance"
                   type="number"
-                  step="0.01"
+                  step={isJPY ? '1' : '0.01'}
                   value={formData.balance}
                   onChange={(e) => setFormData((prev) => ({ ...prev, balance: e.target.value }))}
                 />
@@ -361,7 +364,7 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
                 <Input
                   id="monthlyLimit"
                   type="number"
-                  step="0.01"
+                  step={isJPY ? '1' : '0.01'}
                   value={formData.monthlyLimit}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, monthlyLimit: e.target.value }))

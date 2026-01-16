@@ -122,6 +122,8 @@ export function AccountCreateDialog({
   })
 
   const selectedType = form.watch('type')
+  const selectedCurrencyCode = form.watch('currency')
+  const isJPY = selectedCurrencyCode === 'JPY'
   const selectedAccountType = ACCOUNT_TYPES.find((t) => t.value === selectedType)
   const IconComponent = selectedAccountType?.icon || CreditCard
 
@@ -292,7 +294,7 @@ export function AccountCreateDialog({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step={isJPY ? '1' : '0.01'}
                         placeholder="0"
                         {...field}
                         className="cursor-text"
@@ -315,7 +317,7 @@ export function AccountCreateDialog({
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.01"
+                          step={isJPY ? '1' : '0.01'}
                           placeholder="0.5"
                           {...field}
                           className="cursor-text"
