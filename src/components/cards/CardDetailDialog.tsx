@@ -154,7 +154,7 @@ export function CardDetailDialog({ card, open, onOpenChange, onUpdate }: CardDet
                       <Button
                         onClick={() => setShowCharge(true)}
                         variant="outline"
-                        className="block gap-2"
+                        className="flex gap-2"
                       >
                         <Zap size={16} />
                         チャージ

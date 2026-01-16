@@ -72,8 +72,15 @@
       "Bash(xargs:*)",
       "WebFetch(domain:react-spectrum.adobe.com)",
       "WebFetch(domain:react-aria.adobe.com)",
-      "Bash(gh pr list:*)"
+      "Bash(gh pr list:*)",
+      "Bash(ssh root@10.0.3.109:*)",
+      "Bash(git diff:*)",
+      "mcp__discord-conversation-logger__log_conversation",
+      "Bash(git restore:*)",
+      "Bash(bunx prisma migrate:*)",
+      "Bash(bunx prisma generate:*)"
     ],
-    "deny": []
+    "deny": [],
+    "includeCoAuthoredBy": false
   }
 }
