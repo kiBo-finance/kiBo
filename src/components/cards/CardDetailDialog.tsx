@@ -1,5 +1,6 @@
 'use client'
 
+import { CardEditDialog } from './CardEditDialog'
 import { ChargeDialog } from './ChargeDialog'
 import { PaymentDialog } from './PaymentDialog'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +59,7 @@ export function CardDetailDialog({ card, open, onOpenChange, onUpdate }: CardDet
   const [loading, setLoading] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [showCharge, setShowCharge] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
 
   const fetchCardDetail = useCallback(async () => {
     if (!card?.id) return
@@ -420,7 +422,11 @@ export function CardDetailDialog({ card, open, onOpenChange, onUpdate }: CardDet
                     </div>
 
                     <div className="border-t pt-4">
-                      <Button variant="outline" className="gap-2">
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => setShowEdit(true)}
+                      >
                         <Settings size={16} />
                         カード設定を編集
                       </Button>
@@ -447,6 +453,16 @@ export function CardDetailDialog({ card, open, onOpenChange, onUpdate }: CardDet
         card={cardDetail}
         open={showCharge}
         onOpenChange={setShowCharge}
+        onSuccess={() => {
+          fetchCardDetail()
+          onUpdate()
+        }}
+      />
+
+      <CardEditDialog
+        card={cardDetail}
+        open={showEdit}
+        onOpenChange={setShowEdit}
         onSuccess={() => {
           fetchCardDetail()
           onUpdate()

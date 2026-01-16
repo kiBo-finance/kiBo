@@ -12,7 +12,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { Card } from '@prisma/client'
+import { Plus } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { Link } from 'waku/router/client'
 
 interface CardWithAccount extends Card {
   account: {
@@ -162,8 +164,20 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
               </div>
             ) : accounts.length === 0 ? (
               <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-                <div className="text-sm text-yellow-800">
-                  チャージ可能な口座がありません。別の口座を追加してください。
+                <div className="space-y-2 text-sm text-yellow-800">
+                  <p>
+                    チャージ可能な口座がありません。
+                    <br />
+                    プリペイドカードにチャージするには、カードに紐付いた口座とは別の口座が必要です。
+                  </p>
+                  <Link
+                    to={'/dashboard/accounts/new' as never}
+                    className="inline-flex items-center gap-1 font-medium text-yellow-900 underline hover:no-underline"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    <Plus size={14} />
+                    新しい口座を作成
+                  </Link>
                 </div>
               </div>
             ) : (
