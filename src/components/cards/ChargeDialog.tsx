@@ -37,6 +37,7 @@ interface Account {
 
 export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDialogProps) {
   const [loading, setLoading] = useState(false)
+  const [accountsLoading, setAccountsLoading] = useState(false)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [formData, setFormData] = useState({
     amount: '',
@@ -45,6 +46,10 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
 
   useEffect(() => {
     const fetchAccounts = async () => {
+      setAccountsLoading(true)
+      // まずフォームをリセット
+      setFormData({ amount: '', fromAccountId: '' })
+
       try {
         const response = await fetch('/api/accounts')
         const data = await response.json()
@@ -59,21 +64,21 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
               (account: Account) => account.id === card.defaultChargeAccountId
             )
             if (defaultAccount) {
-              setFormData((prev) => ({ ...prev, fromAccountId: card.defaultChargeAccountId! }))
+              setFormData({ amount: '', fromAccountId: card.defaultChargeAccountId })
             }
           }
         }
       } catch (error) {
         console.error('Failed to fetch accounts:', error)
+      } finally {
+        setAccountsLoading(false)
       }
     }
 
-    if (open) {
+    if (open && card) {
       fetchAccounts()
-      // ダイアログを開くたびにフォームをリセット（デフォルト口座は上で設定）
-      setFormData({ amount: '', fromAccountId: '' })
     }
-  }, [open, card?.accountId, card?.defaultChargeAccountId])
+  }, [open, card?.id, card?.accountId, card?.defaultChargeAccountId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -150,27 +155,40 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
 
           <div className="space-y-2">
             <Label htmlFor="fromAccount">チャージ元口座 *</Label>
-            <Select
-              value={formData.fromAccountId}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, fromAccountId: value }))}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="口座を選択" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    <div className="flex w-full items-center justify-between">
-                      <span>{account.name}</span>
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        {formatCurrency(account.balance, account.currency)}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {accountsLoading ? (
+              <div className="flex h-10 items-center justify-center rounded-md border">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span className="ml-2 text-sm text-muted-foreground">口座を読み込み中...</span>
+              </div>
+            ) : accounts.length === 0 ? (
+              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                <div className="text-sm text-yellow-800">
+                  チャージ可能な口座がありません。別の口座を追加してください。
+                </div>
+              </div>
+            ) : (
+              <Select
+                value={formData.fromAccountId}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, fromAccountId: value }))}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="口座を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      <div className="flex w-full items-center justify-between">
+                        <span>{account.name}</span>
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          {formatCurrency(account.balance, account.currency)}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             {selectedAccount && (
               <div className="text-sm text-muted-foreground">
                 残高: {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
@@ -229,6 +247,8 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
               type="submit"
               disabled={
                 loading ||
+                accountsLoading ||
+                accounts.length === 0 ||
                 !formData.amount ||
                 !formData.fromAccountId ||
                 (selectedAccount &&
