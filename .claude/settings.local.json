@@ -78,7 +78,9 @@
       "mcp__discord-conversation-logger__log_conversation",
       "Bash(git restore:*)",
       "Bash(bunx prisma migrate:*)",
-      "Bash(bunx prisma generate:*)"
+      "Bash(bunx prisma generate:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "includeCoAuthoredBy": false

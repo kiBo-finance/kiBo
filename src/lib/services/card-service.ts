@@ -374,6 +374,108 @@ export class CardService {
   }
 
   /**
+   * プリペイドカードへの別カードからのチャージ
+   */
+  static async chargePrepaidCardFromCard(
+    userId: string,
+    cardId: string,
+    amount: number,
+    fromCardId: string
+  ) {
+    const card = await prisma.card.findFirst({
+      where: {
+        id: cardId,
+        userId,
+        type: 'PREPAID',
+      },
+      include: {
+        account: true,
+      },
+    })
+
+    if (!card) {
+      throw new Error('Prepaid card not found')
+    }
+
+    const fromCard = await prisma.card.findFirst({
+      where: {
+        id: fromCardId,
+        userId,
+        type: 'PREPAID', // プリペイドカード間のみ対応
+      },
+      include: {
+        account: true,
+      },
+    })
+
+    if (!fromCard) {
+      throw new Error('Source card not found')
+    }
+
+    if (cardId === fromCardId) {
+      throw new Error('Cannot charge from the same card')
+    }
+
+    const chargeAmount = new Decimal(amount)
+    const fromCardBalance = fromCard.balance || new Decimal(0)
+
+    if (fromCardBalance.lessThan(chargeAmount)) {
+      throw new Error('Insufficient balance in source card')
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // チャージ元カードから引き落とし
+      await tx.card.update({
+        where: { id: fromCardId },
+        data: {
+          balance: fromCardBalance.minus(chargeAmount),
+        },
+      })
+
+      // チャージ先カード残高更新
+      const currentBalance = card.balance || new Decimal(0)
+      await tx.card.update({
+        where: { id: cardId },
+        data: {
+          balance: currentBalance.plus(chargeAmount),
+        },
+      })
+
+      // 取引記録作成（チャージ元）
+      await tx.transaction.create({
+        data: {
+          amount: chargeAmount,
+          currency: fromCard.account.currency,
+          type: 'TRANSFER',
+          description: `カード間チャージ（出金）: ${fromCard.name} → ${card.name}`,
+          date: new Date(),
+          accountId: fromCard.accountId,
+          cardId: fromCardId,
+          userId,
+        },
+      })
+
+      // 取引記録作成（チャージ先）
+      await tx.transaction.create({
+        data: {
+          amount: chargeAmount,
+          currency: card.account.currency,
+          type: 'TRANSFER',
+          description: `カード間チャージ（入金）: ${fromCard.name} → ${card.name}`,
+          date: new Date(),
+          accountId: card.accountId,
+          cardId: cardId,
+          userId,
+        },
+      })
+
+      return true
+    })
+
+    return result
+  }
+
+  /**
    * カード利用（支払い）処理
    */
   static async processCardPayment(
