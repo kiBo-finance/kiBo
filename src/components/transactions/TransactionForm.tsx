@@ -245,7 +245,7 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {currencies.map((currency) => (
+                  {currencies?.map((currency) => (
                     <SelectItem
                       key={currency.code}
                       value={currency.code}
@@ -320,7 +320,7 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
                 <SelectValue placeholder="口座を選択" />
               </SelectTrigger>
               <SelectContent>
-                {accounts.map((account) => {
+                {accounts?.map((account) => {
                   const balanceNum =
                     typeof account.balance === 'object' && 'toNumber' in account.balance
                       ? account.balance.toNumber()
@@ -350,7 +350,7 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">なし</SelectItem>
-                {filteredCategories.map((category) => (
+                {filteredCategories?.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
@@ -386,7 +386,7 @@ export function TransactionForm({ onSuccess, onCancel, editingId }: TransactionF
             </div>
             {tags.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {tags.map((tag) => (
+                {tags?.map((tag) => (
                   <Badge
                     key={tag}
                     variant="secondary"

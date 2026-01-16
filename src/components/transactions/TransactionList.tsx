@@ -141,7 +141,7 @@ export function TransactionList({
     // コンパクトビュー（ダッシュボード用）
     return (
       <div className="space-y-2">
-        {filteredTransactions.slice(0, 5).map((transaction) => (
+        {filteredTransactions?.slice(0, 5).map((transaction) => (
           <div
             key={transaction.id}
             className="flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50"
@@ -203,7 +203,7 @@ export function TransactionList({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTransactions.map((transaction) => (
+                  filteredTransactions?.map((transaction) => (
                     <TableRow key={transaction.id} className="hover:bg-muted/50">
                       <TableCell>
                         <TooltipProvider>
@@ -238,7 +238,7 @@ export function TransactionList({
                             <div className="mt-1 flex items-center gap-1">
                               <Tag className="h-3 w-3 text-muted-foreground" />
                               <div className="flex gap-1">
-                                {transaction.tags.map((tag) => (
+                                {transaction.tags?.map((tag) => (
                                   <Badge key={tag} variant="secondary" className="py-0 text-xs">
                                     {tag}
                                   </Badge>

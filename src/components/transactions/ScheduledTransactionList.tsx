@@ -111,7 +111,7 @@ export function ScheduledTransactionList({
 
       // ステータスを更新
       setScheduledTransactions(
-        scheduledTransactions.map((t) =>
+        scheduledTransactions?.map((t) =>
           t.id === selectedTransaction.id
             ? { ...t, status: 'COMPLETED', completedAt: new Date().toISOString() }
             : t
@@ -253,7 +253,7 @@ export function ScheduledTransactionList({
             {filterStatus === 'OVERDUE' ? '期限切れの予定はありません' : '今後の予定はありません'}
           </p>
         ) : (
-          displayTransactions.map((transaction) => (
+          displayTransactions?.map((transaction) => (
             <div
               key={transaction.id}
               className="flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50"
@@ -334,7 +334,7 @@ export function ScheduledTransactionList({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTransactions.map((transaction) => (
+                  filteredTransactions?.map((transaction) => (
                     <TableRow key={transaction.id} className="hover:bg-muted/50">
                       <TableCell>
                         <TooltipProvider>
