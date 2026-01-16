@@ -3,7 +3,7 @@
  * Provides offline support and caching strategies for the PWA
  */
 
-const CACHE_VERSION = 'v2'
+const CACHE_VERSION = 'v3'
 const STATIC_CACHE_NAME = `kibo-static-${CACHE_VERSION}`
 const API_CACHE_NAME = `kibo-api-${CACHE_VERSION}`
 const OFFLINE_DB_NAME = 'kibo-offline'
