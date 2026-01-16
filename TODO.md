@@ -17,12 +17,23 @@
 - Passkeyモデルをスキーマに追加
 - クライアント側にpasskeyClient追加
 
-### 2. メール送信機能の本番実装
-`src/lib/email.ts` はプレースホルダー実装（console.logのみ）です。
-本番環境では SendGrid、Resend 等のメール送信サービスに置き換えが必要です。
+### ~~2. メール送信機能の本番実装~~ ✅
+~~`src/lib/email.ts` はプレースホルダー実装（console.logのみ）です。~~ → **実装完了**
+
+- Nodemailer + SMTP による本番メール送信を実装
+- 環境変数でSMTP設定（SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM）
+- 開発環境ではログ出力のみ、本番環境ではSMTP送信
+- 接続テスト機能（verifyEmailConnection）を追加
 
 ### 3. 環境変数の設定
 - `BETTER_AUTH_SECRET` - 本番用の安全なシークレットキーを設定
+  - 生成方法: `openssl rand -base64 32`
+- SMTP設定（メール送信に必要）
+  - `SMTP_HOST` - SMTPサーバーホスト
+  - `SMTP_PORT` - SMTPポート（587推奨）
+  - `SMTP_USER` - SMTPユーザー名
+  - `SMTP_PASS` - SMTPパスワード/アプリパスワード
+  - `SMTP_FROM` - 送信元アドレス（オプション）
 
 ## 優先度: 中（機能改善）
 
@@ -84,3 +95,4 @@
 - [x] 認証機能の拡張（パスキー・OAuth対応）
 - [x] 為替レート変動率表示機能
 - [x] 口座詳細ページの関連情報表示
+- [x] メール送信機能の本番実装（Nodemailer + SMTP）
