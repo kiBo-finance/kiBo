@@ -3,14 +3,22 @@ import type { Currency, ExchangeRate } from '@prisma/client'
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
+// 為替レート変動データを含む拡張型
+export interface ExchangeRateWithChange extends ExchangeRate {
+  change?: number
+  changePercent?: number
+  previousRate?: number
+  previousTimestamp?: Date
+}
+
 // 通貨リスト
 export const currenciesAtom = atom<Currency[]>([])
 
 // 基準通貨（localStorage に保存）
 export const baseCurrencyAtom = atomWithStorage<string>('kibo-baseCurrency', 'JPY')
 
-// 為替レート
-export const exchangeRatesAtom = atom<ExchangeRate[]>([])
+// 為替レート（変動率データを含む場合あり）
+export const exchangeRatesAtom = atom<ExchangeRateWithChange[]>([])
 
 // 為替レート管理インスタンス（派生atom）
 export const exchangeRateManagerAtom = atom((get) => {
@@ -70,9 +78,12 @@ export const otherCurrenciesAtom = atom((get) => {
 })
 
 // 為替レート更新アクション
-export const updateExchangeRatesAtom = atom(null, (get, set, newRates: ExchangeRate[]) => {
-  set(exchangeRatesAtom, newRates)
-})
+export const updateExchangeRatesAtom = atom(
+  null,
+  (get, set, newRates: ExchangeRateWithChange[]) => {
+    set(exchangeRatesAtom, newRates)
+  }
+)
 
 // 通貨追加アクション
 export const addCurrencyAtom = atom(null, (get, set, newCurrency: Currency) => {

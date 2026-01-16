@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { calculateRateChange } from '@/lib/utils/currency'
 import type { Prisma } from '@prisma/client'
 import { Decimal } from 'decimal.js'
 import { z } from 'zod'
@@ -10,6 +11,22 @@ const createExchangeRateSchema = z.object({
   rate: z.number().positive(),
   source: z.string().optional(),
 })
+
+// 為替レート変動データを含む拡張型
+interface ExchangeRateWithChange {
+  id: string
+  fromCurrency: string
+  toCurrency: string
+  rate: Decimal | string
+  timestamp: Date
+  source: string | null
+  fromCurrencyRef?: { name: string; symbol: string }
+  toCurrencyRef?: { name: string; symbol: string }
+  change?: number
+  changePercent?: number
+  previousRate?: number
+  previousTimestamp?: Date
+}
 
 /**
  * GET /api/exchange-rates
@@ -44,7 +61,7 @@ export async function GET(request: Request) {
 
     if (latest) {
       // 最新の為替レートのみ取得
-      exchangeRates = await prisma.exchangeRate.findMany({
+      const latestRates = await prisma.exchangeRate.findMany({
         where: whereClause,
         orderBy: [{ fromCurrency: 'asc' }, { toCurrency: 'asc' }, { timestamp: 'desc' }],
         distinct: ['fromCurrency', 'toCurrency'],
@@ -57,6 +74,42 @@ export async function GET(request: Request) {
           },
         },
       })
+
+      // 各通貨ペアの前回レートを取得して変動率を計算
+      const ratesWithChange: ExchangeRateWithChange[] = await Promise.all(
+        latestRates.map(async (rate) => {
+          // 最新の1つ前のレートを取得
+          const previousRate = await prisma.exchangeRate.findFirst({
+            where: {
+              fromCurrency: rate.fromCurrency,
+              toCurrency: rate.toCurrency,
+              timestamp: { lt: rate.timestamp },
+            },
+            orderBy: { timestamp: 'desc' },
+          })
+
+          if (previousRate) {
+            const currentRateDecimal = new Decimal(rate.rate.toString())
+            const previousRateDecimal = new Decimal(previousRate.rate.toString())
+            const { change, changePercent } = calculateRateChange(
+              currentRateDecimal,
+              previousRateDecimal
+            )
+
+            return {
+              ...rate,
+              change: change.toNumber(),
+              changePercent: changePercent.toNumber(),
+              previousRate: previousRateDecimal.toNumber(),
+              previousTimestamp: previousRate.timestamp,
+            }
+          }
+
+          return rate as ExchangeRateWithChange
+        })
+      )
+
+      exchangeRates = ratesWithChange
     } else {
       // 履歴も含めて取得
       const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 1000)

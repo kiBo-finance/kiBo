@@ -10,9 +10,10 @@ import {
   baseCurrencyAtom,
   addRecentCurrencyAtom,
   currencyMapAtom,
+  exchangeRatesAtom,
 } from '@/lib/atoms/currency'
 import { cn } from '@/lib/utils'
-import { CurrencyAmount, calculateRateChange } from '@/lib/utils/currency'
+import { CurrencyAmount } from '@/lib/utils/currency'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { ArrowUpDown, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -40,6 +41,27 @@ export function CurrencyConverter({
   const baseCurrency = useAtomValue(baseCurrencyAtom)
   const addRecentCurrency = useSetAtom(addRecentCurrencyAtom)
   const currencyMap = useAtomValue(currencyMapAtom)
+  const exchangeRates = useAtomValue(exchangeRatesAtom)
+
+  // 現在の通貨ペアの変動データを取得
+  const rateChangeData = (() => {
+    if (!fromCurrency || !toCurrency || fromCurrency === toCurrency) return null
+    const rate = exchangeRates.find(
+      (r) => r.fromCurrency === fromCurrency && r.toCurrency === toCurrency
+    )
+    if (rate?.changePercent !== undefined) {
+      return { changePercent: rate.changePercent }
+    }
+    // 逆方向もチェック
+    const reverseRate = exchangeRates.find(
+      (r) => r.fromCurrency === toCurrency && r.toCurrency === fromCurrency
+    )
+    if (reverseRate?.changePercent !== undefined) {
+      // 逆方向の場合は符号を反転
+      return { changePercent: -reverseRate.changePercent }
+    }
+    return null
+  })()
 
   // デフォルト通貨設定
   useEffect(() => {
@@ -236,11 +258,28 @@ export function CurrencyConverter({
               </div>
             </div>
 
-            {/* TODO: 為替レート変動表示（履歴データが必要）*/}
-            {/* <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 text-green-600" />
-              <span>+0.25% (24h)</span>
-            </div> */}
+            {rateChangeData && (
+              <div
+                className={cn(
+                  'flex items-center gap-2 text-xs',
+                  rateChangeData.changePercent > 0
+                    ? 'text-green-600 dark:text-green-400'
+                    : rateChangeData.changePercent < 0
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-muted-foreground'
+                )}
+              >
+                {rateChangeData.changePercent > 0 ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : rateChangeData.changePercent < 0 ? (
+                  <TrendingDown className="h-3 w-3" />
+                ) : null}
+                <span>
+                  {rateChangeData.changePercent > 0 ? '+' : ''}
+                  {rateChangeData.changePercent.toFixed(2)}% (前回比)
+                </span>
+              </div>
+            )}
           </div>
         )}
 

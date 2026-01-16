@@ -9,6 +9,7 @@ import {
   popularCurrencyPairsAtom,
   currencyMapAtom,
   exchangeRateLastUpdateAtom,
+  type ExchangeRateWithChange,
 } from '@/lib/atoms/currency'
 import { cn } from '@/lib/utils'
 import { useAtomValue } from 'jotai'
@@ -97,7 +98,7 @@ export function ExchangeRatesList({
     }
   }
 
-  const getRateDisplay = (rate: (typeof exchangeRates)[0]) => {
+  const getRateDisplay = (rate: ExchangeRateWithChange) => {
     const fromCurrency = currencyMap.get(rate.fromCurrency)
     const toCurrency = currencyMap.get(rate.toCurrency)
 
@@ -108,6 +109,8 @@ export function ExchangeRatesList({
       toName: toCurrency?.name || rate.toCurrency,
       rate: Number(rate.rate),
       decimals: toCurrency?.decimals || 2,
+      changePercent: rate.changePercent,
+      hasChange: rate.changePercent !== undefined && rate.changePercent !== null,
     }
   }
 
@@ -151,8 +154,25 @@ export function ExchangeRatesList({
                     <span className="text-xs text-muted-foreground">→</span>
                     <span className="font-mono text-xs">{display.toSymbol}</span>
                   </div>
-                  <div className="text-sm font-medium">
-                    {display.rate.toFixed(display.decimals)}
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-medium">
+                      {display.rate.toFixed(display.decimals)}
+                    </div>
+                    {display.hasChange && display.changePercent !== undefined && (
+                      <span
+                        className={cn(
+                          'text-xs',
+                          display.changePercent > 0
+                            ? 'text-green-600 dark:text-green-400'
+                            : display.changePercent < 0
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-muted-foreground'
+                        )}
+                      >
+                        {display.changePercent > 0 ? '+' : ''}
+                        {display.changePercent.toFixed(1)}%
+                      </span>
+                    )}
                   </div>
                 </div>
               )
@@ -242,11 +262,28 @@ export function ExchangeRatesList({
                     <div className="text-xs text-muted-foreground">
                       {formatTimestamp(rate.timestamp)}
                     </div>
-                    {/* TODO: 変動率表示（履歴データが必要） */}
-                    {/* <div className="flex items-center gap-1 text-xs">
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                      <span className="text-green-600">+0.15%</span>
-                    </div> */}
+                    {display.hasChange && display.changePercent !== undefined && (
+                      <div
+                        className={cn(
+                          'flex items-center justify-end gap-1 text-xs',
+                          display.changePercent > 0
+                            ? 'text-green-600 dark:text-green-400'
+                            : display.changePercent < 0
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-muted-foreground'
+                        )}
+                      >
+                        {display.changePercent > 0 ? (
+                          <TrendingUp className="h-3 w-3" />
+                        ) : display.changePercent < 0 ? (
+                          <TrendingDown className="h-3 w-3" />
+                        ) : null}
+                        <span>
+                          {display.changePercent > 0 ? '+' : ''}
+                          {display.changePercent.toFixed(2)}%
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )
