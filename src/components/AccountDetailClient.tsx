@@ -18,6 +18,7 @@ import { useSetAtom, useAtomValue } from 'jotai'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'waku/router/client'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 interface AccountDetailClientProps {
   id: string
@@ -80,14 +81,16 @@ export function AccountDetailClient({ id }: AccountDetailClientProps) {
 
       if (response.ok) {
         removeAccount(accountId)
+        toast.success('口座を削除しました')
         router.push('/dashboard/accounts' as any)
       } else {
         const error = await response.json()
         console.error('Failed to delete account:', error)
-        // TODO: エラー表示
+        toast.error(error.error || '口座の削除に失敗しました')
       }
     } catch (error) {
       console.error('Failed to delete account:', error)
+      toast.error('口座の削除に失敗しました')
     } finally {
       setIsDeleting(false)
       setIsDeleteDialogOpen(false)

@@ -2,14 +2,12 @@
 
 ## 優先度: 高（セキュリティ・本番準備）
 
-### 1. 管理者権限チェックの実装
-通貨管理APIに管理者権限チェックが未実装です。
+### ~~1. 管理者権限チェックの実装~~ ✅
+~~通貨管理APIに管理者権限チェックが未実装です。~~ → **実装完了**
 
-| ファイル | 行 | 内容 |
-|----------|-----|------|
-| `src/pages/_api/api/currencies.ts` | 56 | POST（通貨追加）に権限チェック必要 |
-| `src/pages/_api/api/currencies/[code].ts` | 72 | PUT（通貨更新）に権限チェック必要 |
-| `src/pages/_api/api/currencies/[code].ts` | 127 | DELETE（通貨削除）に権限チェック必要 |
+- UserモデルにisAdminフィールドを追加
+- better-auth設定を更新
+- POST/PATCH/DELETE エンドポイントに権限チェックを実装
 
 ### 2. メール送信機能の本番実装
 `src/lib/email.ts` はプレースホルダー実装（console.logのみ）です。
@@ -20,11 +18,12 @@
 
 ## 優先度: 中（機能改善）
 
-### 4. エラーハンドリングの改善
-| ファイル | 行 | 内容 |
-|----------|-----|------|
-| `src/components/AccountDetailClient.tsx` | 87 | 口座読み込みエラーの表示 |
-| `src/components/accounts/CreateAccountForm.tsx` | 148 | フォームエラーのtoast表示 |
+### ~~4. エラーハンドリングの改善~~ ✅
+~~エラー表示が未実装です。~~ → **実装完了**
+
+- sonner toastを使用してエラー/成功メッセージを表示
+- AccountDetailClient.tsx: 削除エラー/成功のtoast追加
+- CreateAccountForm.tsx: 作成エラー/成功のtoast追加
 
 ### 5. ユーザー設定のサーバー保存
 `src/components/SettingsClient.tsx:74` - 現在はローカルのみ。サーバー側に保存する機能が必要。
@@ -47,13 +46,12 @@
 
 ## コード品質
 
-### 8. デバッグログの整理
-本番デプロイ前に以下のconsole.log/errorを整理またはロギングサービスに置き換え：
+### ~~8. デバッグログの整理~~ ✅
+~~本番デプロイ前にconsole.log/errorを整理する必要があります。~~ → **実装完了**
 
-- `src/lib/email.ts` - 📧 絵文字付きログ
-- `src/lib/notifications/reminder-service.ts` - 🔔🚨✅❌ 絵文字付きログ
-- `src/lib/sync-service.ts` - [SyncService] ログ
-- `src/components/providers/ServiceWorkerProvider.tsx` - [PWA] ログ
+- `src/lib/logger.ts` - 条件付きロガーユーティリティを作成
+- 本番環境ではデバッグログを自動的に無効化
+- 絵文字付きログをstructuredなログに置き換え
 
 ---
 
@@ -66,3 +64,6 @@
 - [x] ビルド警告の抑制
 - [x] Service Worker キャッシュ修正
 - [x] API レスポンスラッパー対応
+- [x] 管理者権限チェックの実装（通貨API）
+- [x] エラーハンドリングの改善（toast表示）
+- [x] デバッグログの整理（ロガーユーティリティ導入）

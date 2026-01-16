@@ -30,6 +30,7 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { Wallet, CreditCard, PiggyBank, Clock, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { z } from 'zod'
 
 const accountFormSchema = z.object({
@@ -138,6 +139,8 @@ export function CreateAccountForm({ className, onSuccess, onCancel }: CreateAcco
       // Jotai stateを更新
       addAccount(newAccount)
 
+      toast.success('口座を作成しました')
+
       // 成功コールバック
       onSuccess?.(newAccount.id)
 
@@ -145,7 +148,7 @@ export function CreateAccountForm({ className, onSuccess, onCancel }: CreateAcco
       form.reset()
     } catch (error) {
       console.error('Account creation failed:', error)
-      // TODO: エラーハンドリング（toast表示など）
+      toast.error(error instanceof Error ? error.message : '口座の作成に失敗しました')
     } finally {
       setIsLoading(false)
     }

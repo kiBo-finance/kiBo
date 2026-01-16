@@ -10,6 +10,7 @@ import {
   type SyncStatus,
 } from '@/lib/sync-service'
 import { getPendingCount } from '@/lib/offline-store'
+import { pwaLogger } from '@/lib/logger'
 
 interface ServiceWorkerContextValue {
   isOnline: boolean
@@ -56,7 +57,7 @@ export function ServiceWorkerProvider({ children }: ServiceWorkerProviderProps) 
           scope: '/',
         })
 
-        console.log('[PWA] Service Worker registered:', registration.scope)
+        pwaLogger.debug('Service Worker registered:', registration.scope)
         setIsServiceWorkerReady(true)
 
         // Handle updates
@@ -65,13 +66,13 @@ export function ServiceWorkerProvider({ children }: ServiceWorkerProviderProps) 
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[PWA] New service worker installed')
+                pwaLogger.debug('New service worker installed')
               }
             })
           }
         })
       } catch (error) {
-        console.error('[PWA] Service Worker registration failed:', error)
+        pwaLogger.error('Service Worker registration failed:', error)
       }
     }
 
@@ -119,7 +120,7 @@ export function ServiceWorkerProvider({ children }: ServiceWorkerProviderProps) 
       const count = await getPendingCount()
       setPendingCount(count)
     } catch (error) {
-      console.error('[PWA] Failed to get pending count:', error)
+      pwaLogger.error('Failed to get pending count:', error)
     }
   }
 

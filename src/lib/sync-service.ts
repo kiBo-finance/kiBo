@@ -9,6 +9,7 @@ import {
   clearSyncedTransactions,
   type OfflineTransaction,
 } from './offline-store'
+import { syncLogger } from './logger'
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
 
@@ -48,7 +49,7 @@ function emitSyncEvent(result: SyncResult): void {
     try {
       handler(result)
     } catch (error) {
-      console.error('[SyncService] Error in sync event handler:', error)
+      syncLogger.error('Error in sync event handler:', error)
     }
   })
 }
@@ -213,7 +214,7 @@ export async function requestBackgroundSync(): Promise<boolean> {
       return true
     }
   } catch (error) {
-    console.error('[SyncService] Failed to register background sync:', error)
+    syncLogger.error('Failed to register background sync:', error)
   }
 
   return false
@@ -228,12 +229,12 @@ export function setupAutoSync(): () => void {
   }
 
   const handleOnline = () => {
-    console.log('[SyncService] Device is online, syncing...')
+    syncLogger.debug('Device is online, syncing...')
     syncAllPending()
   }
 
   const handleOffline = () => {
-    console.log('[SyncService] Device is offline')
+    syncLogger.debug('Device is offline')
     currentSyncStatus = 'idle'
   }
 
@@ -244,7 +245,7 @@ export function setupAutoSync(): () => void {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data?.type === 'SYNC_COMPLETE') {
-        console.log('[SyncService] Background sync complete')
+        syncLogger.debug('Background sync complete')
         syncAllPending() // Update local state
       }
     })

@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Decimal from 'decimal.js'
 import type { TransactionType } from '@prisma/client'
+import { reminderLogger } from '../logger'
 
 /**
  * Interface for scheduled transaction with included relations for notifications
@@ -240,7 +241,7 @@ export class ReminderService {
    * リマインダー通知を送信
    */
   static async sendReminders() {
-    console.log('🔔 Checking for reminder notifications...')
+    reminderLogger.debug('Checking for reminder notifications...')
 
     const reminders = await this.getPendingReminders()
 
@@ -286,18 +287,18 @@ export class ReminderService {
             data: { isReminderSent: true },
           })
 
-          console.log(`✅ Reminder sent for transaction: ${transaction.description}`)
+          reminderLogger.debug(`Reminder sent for transaction: ${transaction.description}`)
         } else {
           // 送信失敗
           await WebhookNotificationService.updateNotificationLog(log.id, 'FAILED', result.error)
-          console.error(
-            `❌ Failed to send reminder for transaction: ${transaction.description}`,
+          reminderLogger.error(
+            `Failed to send reminder for transaction: ${transaction.description}`,
             result.error
           )
         }
       } catch (error) {
-        console.error(
-          `❌ Error processing reminder for transaction: ${transaction.description}`,
+        reminderLogger.error(
+          `Error processing reminder for transaction: ${transaction.description}`,
           error
         )
       }
@@ -316,7 +317,7 @@ export class ReminderService {
    * 期限切れ通知を送信
    */
   static async sendOverdueNotifications() {
-    console.log('🚨 Checking for overdue notifications...')
+    reminderLogger.debug('Checking for overdue notifications...')
 
     const overdueTransactions = await this.getOverdueTransactions()
 
@@ -372,18 +373,18 @@ export class ReminderService {
         if (result.success) {
           // 送信成功
           await WebhookNotificationService.updateNotificationLog(log.id, 'SENT')
-          console.log(`🚨 Overdue notification sent for transaction: ${transaction.description}`)
+          reminderLogger.debug(`Overdue notification sent for transaction: ${transaction.description}`)
         } else {
           // 送信失敗
           await WebhookNotificationService.updateNotificationLog(log.id, 'FAILED', result.error)
-          console.error(
-            `❌ Failed to send overdue notification for transaction: ${transaction.description}`,
+          reminderLogger.error(
+            `Failed to send overdue notification for transaction: ${transaction.description}`,
             result.error
           )
         }
       } catch (error) {
-        console.error(
-          `❌ Error processing overdue notification for transaction: ${transaction.description}`,
+        reminderLogger.error(
+          `Error processing overdue notification for transaction: ${transaction.description}`,
           error
         )
       }
@@ -398,14 +399,12 @@ export class ReminderService {
    * 全ての通知処理を実行（メイン関数）
    */
   static async processAllNotifications() {
-    console.log('🚀 Starting notification processing...')
+    reminderLogger.debug('Starting notification processing...')
 
     const reminderResults = await this.sendReminders()
     const overdueResults = await this.sendOverdueNotifications()
 
-    console.log(`📊 Notification processing complete:`)
-    console.log(`   - Reminders processed: ${reminderResults.processed}`)
-    console.log(`   - Overdue notifications processed: ${overdueResults.processed}`)
+    reminderLogger.debug(`Notification processing complete: Reminders=${reminderResults.processed}, Overdue=${overdueResults.processed}`)
 
     return {
       reminders: reminderResults,
