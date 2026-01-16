@@ -110,9 +110,11 @@ function TabsContent({ className, value, id, ...props }: TabsContentProps) {
   return (
     <TabPanel
       id={id ?? value}
-      className={composeRenderProps(className, (className) =>
+      className={composeRenderProps(className, (className, renderProps) =>
         cn(
           'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+          // Animation for tab content
+          'data-[inert]:hidden',
           className
         )
       )}
