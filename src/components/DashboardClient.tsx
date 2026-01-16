@@ -6,6 +6,7 @@ import { CurrencyConverter } from '@/components/currency/CurrencyConverter'
 import { ExchangeRatesList } from '@/components/currency/ExchangeRatesList'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { ScheduledTransactionsOverview } from '@/components/dashboard/ScheduledTransactionsOverview'
+import { PostpayPaymentsOverview } from '@/components/postpay/PostpayPaymentsOverview'
 import {
   currenciesAtom,
   exchangeRatesAtom,
@@ -119,6 +120,9 @@ export function DashboardClient() {
         {/* 予定取引概要 */}
         <ScheduledTransactionsOverview />
       </div>
+
+      {/* ポストペイ支払い概要 */}
+      <PostpayPaymentsOverview />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 通貨変換 */}
