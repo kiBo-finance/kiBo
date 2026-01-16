@@ -53,10 +53,10 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // TODO: 管理者権限チェックを実装
-    // if (!session.user.isAdmin) {
-    //   return Response.json({ error: 'Admin access required' }, { status: 403 })
-    // }
+    // 管理者権限チェック
+    if (!session.user.isAdmin) {
+      return Response.json({ error: 'Admin access required' }, { status: 403 })
+    }
 
     const body = await request.json()
     const validatedData = createCurrencySchema.parse(body)

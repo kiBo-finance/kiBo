@@ -14,6 +14,11 @@ export const auth = betterAuth({
         defaultValue: 'JPY',
         input: true,
       },
+      isAdmin: {
+        type: 'boolean',
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   emailAndPassword: {

@@ -69,10 +69,10 @@ export async function PATCH(request: Request) {
       return Response.json({ error: 'Currency code is required' }, { status: 400 })
     }
 
-    // TODO: 管理者権限チェックを実装
-    // if (!session.user.isAdmin) {
-    //   return Response.json({ error: 'Admin access required' }, { status: 403 })
-    // }
+    // 管理者権限チェック
+    if (!session.user.isAdmin) {
+      return Response.json({ error: 'Admin access required' }, { status: 403 })
+    }
 
     const currency = await prisma.currency.findUnique({
       where: { code: code.toUpperCase() },
@@ -124,10 +124,10 @@ export async function DELETE(request: Request) {
       return Response.json({ error: 'Currency code is required' }, { status: 400 })
     }
 
-    // TODO: 管理者権限チェックを実装
-    // if (!session.user.isAdmin) {
-    //   return Response.json({ error: 'Admin access required' }, { status: 403 })
-    // }
+    // 管理者権限チェック
+    if (!session.user.isAdmin) {
+      return Response.json({ error: 'Admin access required' }, { status: 403 })
+    }
 
     const currency = await prisma.currency.findUnique({
       where: { code: code.toUpperCase() },
