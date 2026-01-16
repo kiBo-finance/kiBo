@@ -9,6 +9,14 @@
 - better-auth設定を更新
 - POST/PATCH/DELETE エンドポイントに権限チェックを実装
 
+### 1.5. 認証機能の拡張（新規）
+better-authの認証方式を拡張します。
+
+| 機能 | 説明 |
+|------|------|
+| パスキー認証 | WebAuthn/FIDO2対応のパスワードレス認証 |
+| OAuth認証 | Google、GitHub等のソーシャルログイン |
+
 ### 2. メール送信機能の本番実装
 `src/lib/email.ts` はプレースホルダー実装（console.logのみ）です。
 本番環境では SendGrid、Resend 等のメール送信サービスに置き換えが必要です。
@@ -25,8 +33,12 @@
 - AccountDetailClient.tsx: 削除エラー/成功のtoast追加
 - CreateAccountForm.tsx: 作成エラー/成功のtoast追加
 
-### 5. ユーザー設定のサーバー保存
-`src/components/SettingsClient.tsx:74` - 現在はローカルのみ。サーバー側に保存する機能が必要。
+### ~~5. ユーザー設定のサーバー保存~~ ✅
+~~`src/components/SettingsClient.tsx:74` - 現在はローカルのみ。サーバー側に保存する機能が必要。~~ → **実装完了**
+
+- `/api/user/settings` エンドポイントを作成（GET/PATCH）
+- 基準通貨の変更をサーバーに保存
+- ページ読み込み時にサーバーから設定を同期
 
 ### 6. 為替レート履歴機能
 | ファイル | 行 | 内容 |
@@ -67,3 +79,4 @@
 - [x] 管理者権限チェックの実装（通貨API）
 - [x] エラーハンドリングの改善（toast表示）
 - [x] デバッグログの整理（ロガーユーティリティ導入）
+- [x] ユーザー設定のサーバー保存（基準通貨）

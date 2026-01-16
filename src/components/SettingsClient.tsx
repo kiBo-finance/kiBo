@@ -25,6 +25,7 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { Settings, Globe, RefreshCw, Bell, ExternalLink } from 'lucide-react'
 import { Link } from 'waku/router/client'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 export function SettingsClient() {
   const [isLoading, setIsLoading] = useState(false)
@@ -43,6 +44,15 @@ export function SettingsClient() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // ユーザー設定を取得（サーバーから基準通貨を同期）
+        const userSettingsRes = await fetch('/api/user/settings')
+        if (userSettingsRes.ok) {
+          const userSettings = await userSettingsRes.json()
+          if (userSettings.baseCurrency) {
+            changeBaseCurrency(userSettings.baseCurrency)
+          }
+        }
+
         // 通貨データ取得
         const currenciesRes = await fetch('/api/currencies')
         if (currenciesRes.ok) {
@@ -62,23 +72,30 @@ export function SettingsClient() {
     }
 
     loadData()
-  }, [setCurrencies, setExchangeRates])
+  }, [setCurrencies, setExchangeRates, changeBaseCurrency])
 
   const handleBaseCurrencyChange = async (newCurrency: string) => {
     setIsSaving(true)
 
     try {
-      // 基準通貨を変更
-      changeBaseCurrency(newCurrency)
+      // サーバーに保存
+      const response = await fetch('/api/user/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseCurrency: newCurrency }),
+      })
 
-      // TODO: サーバーに保存（ユーザー設定として）
-      // await fetch('/api/user/settings', {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ baseCurrency: newCurrency })
-      // })
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update settings')
+      }
+
+      // ローカル状態を更新
+      changeBaseCurrency(newCurrency)
+      toast.success('基準通貨を更新しました')
     } catch (error) {
       console.error('Failed to update base currency:', error)
+      toast.error('基準通貨の更新に失敗しました')
     } finally {
       setIsSaving(false)
     }
