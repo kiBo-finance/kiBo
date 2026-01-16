@@ -18,6 +18,7 @@ const CreateCardSchema = z.object({
 
   // プリペイドカード用
   balance: z.number().min(0).optional(),
+  defaultChargeAccountId: z.string().optional(),
 
   // デビットカード用
   linkedAccountId: z.string().optional(),

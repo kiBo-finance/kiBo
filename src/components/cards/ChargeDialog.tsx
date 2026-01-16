@@ -50,7 +50,18 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
         const data = await response.json()
         if (data.success) {
           // プリペイドカードの関連口座以外を表示
-          setAccounts(data.data.filter((account: Account) => account.id !== card?.accountId))
+          const filteredAccounts = data.data.filter((account: Account) => account.id !== card?.accountId)
+          setAccounts(filteredAccounts)
+
+          // デフォルトチャージ元口座が設定されていれば自動選択
+          if (card?.defaultChargeAccountId) {
+            const defaultAccount = filteredAccounts.find(
+              (account: Account) => account.id === card.defaultChargeAccountId
+            )
+            if (defaultAccount) {
+              setFormData((prev) => ({ ...prev, fromAccountId: card.defaultChargeAccountId! }))
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to fetch accounts:', error)
@@ -59,8 +70,10 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
 
     if (open) {
       fetchAccounts()
+      // ダイアログを開くたびにフォームをリセット（デフォルト口座は上で設定）
+      setFormData({ amount: '', fromAccountId: '' })
     }
-  }, [open, card?.accountId])
+  }, [open, card?.accountId, card?.defaultChargeAccountId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
