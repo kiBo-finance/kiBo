@@ -87,10 +87,10 @@ export function DashboardClient() {
       {/* メインコンテンツ */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* 口座一覧 */}
-        <div className="relative">
-          <AccountsList onAccountSelect={handleAccountSelect} compact />
-          {/* 口座作成ボタンをオーバーレイ */}
-          <div className="absolute right-3 top-3">
+        <AccountsList
+          onAccountSelect={handleAccountSelect}
+          compact
+          createTrigger={
             <AccountCreateDialog
               onAccountCreated={handleCreateAccount}
               trigger={
@@ -113,8 +113,8 @@ export function DashboardClient() {
                 </button>
               }
             />
-          </div>
-        </div>
+          }
+        />
 
         {/* 予定取引概要 */}
         <ScheduledTransactionsOverview />

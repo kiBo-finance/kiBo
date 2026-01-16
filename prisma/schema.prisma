@@ -34,7 +34,8 @@ model User {
   budgets             Budget[]
   notificationSettings NotificationSettings[]
   autoTransfers       AutoTransfer[]
-  
+  postpayPayments     PostpayPayment[]
+
   @@map("users")
 }
 
@@ -213,7 +214,8 @@ model Card {
   linkedAccount AppAccount?  @relation("LinkedCardAccount", fields: [linkedAccountId], references: [id])
   transactions Transaction[]
   autoTransfers AutoTransfer[]
-  
+  postpayPayments PostpayPayment[]
+
   @@map("cards")
 }
 
@@ -250,6 +252,45 @@ enum AutoTransferStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+// ポストペイ支払いスケジュール
+model PostpayPayment {
+  id            String              @id @default(cuid())
+  cardId        String
+  userId        String
+
+  // 借入情報
+  chargeAmount  Decimal             @db.Decimal(15,4) // チャージ/借入金額
+  currency      String
+  chargeDate    DateTime            // チャージ日
+  description   String              // 利用内容
+
+  // 支払い情報
+  dueDate       DateTime            // 支払い期日
+  status        PostpayPaymentStatus @default(PENDING)
+  paidAt        DateTime?           // 支払い完了日
+  paidAmount    Decimal?            @db.Decimal(15,4) // 実際の支払い金額
+
+  // メタデータ
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // リレーション
+  card          Card                @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user          User                @relation(fields: [userId], references: [id])
+
+  @@index([cardId, status])
+  @@index([userId, dueDate])
+  @@map("postpay_payments")
+}
+
+enum PostpayPaymentStatus {
+  PENDING    // 支払い待ち
+  SCHEDULED  // カレンダー登録済み
+  PAID       // 支払い完了
+  OVERDUE    // 期限超過
 }
 
 // カテゴリ

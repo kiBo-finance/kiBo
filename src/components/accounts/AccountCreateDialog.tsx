@@ -242,34 +242,44 @@ export function AccountCreateDialog({
               <FormField
                 control={form.control}
                 name="currency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>通貨</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer">
-                          <SelectValue placeholder="通貨を選択" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {currencies.map((currency) => (
-                          <SelectItem
-                            key={currency.code}
-                            value={currency.code}
-                            className="cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-sm">{currency.symbol}</span>
-                              <span>{currency.code}</span>
-                              <span className="text-sm text-muted-foreground">{currency.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const selectedCurrency = currencies.find((c) => c.code === field.value)
+                  return (
+                    <FormItem>
+                      <FormLabel>通貨</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="cursor-pointer">
+                            {selectedCurrency ? (
+                              <span className="flex items-center gap-2">
+                                <span className="font-mono text-sm">{selectedCurrency.symbol}</span>
+                                <span>{selectedCurrency.code}</span>
+                              </span>
+                            ) : (
+                              <SelectValue placeholder="通貨を選択" />
+                            )}
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {currencies.map((currency) => (
+                            <SelectItem
+                              key={currency.code}
+                              value={currency.code}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm">{currency.symbol}</span>
+                                <span>{currency.code}</span>
+                                <span className="text-sm text-muted-foreground">{currency.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )
+                }}
               />
 
               <FormField

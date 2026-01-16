@@ -43,6 +43,7 @@ interface AccountsListProps {
   onDeleteAccount?: (accountId: string) => void
   showBalances?: boolean
   compact?: boolean
+  createTrigger?: React.ReactNode
 }
 
 const ACCOUNT_TYPE_LABELS = {
@@ -67,6 +68,7 @@ export function AccountsList({
   onDeleteAccount,
   showBalances = true,
   compact = false,
+  createTrigger,
 }: AccountsListProps) {
   const [balancesVisible, setBalancesVisible] = useState(showBalances)
   const accounts = useAtomValue(activeAccountsAtom)
@@ -116,6 +118,7 @@ export function AccountsList({
                 <Plus className="h-3 w-3" />
               </Button>
             )}
+            {createTrigger}
           </div>
         </div>
 
