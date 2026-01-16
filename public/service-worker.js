@@ -3,15 +3,14 @@
  * Provides offline support and caching strategies for the PWA
  */
 
-const CACHE_VERSION = 'v4'
+const CACHE_VERSION = 'v5'
 const STATIC_CACHE_NAME = `kibo-static-${CACHE_VERSION}`
 const API_CACHE_NAME = `kibo-api-${CACHE_VERSION}`
 const OFFLINE_DB_NAME = 'kibo-offline'
 const OFFLINE_STORE_NAME = 'pendingTransactions'
 
-// Static assets to cache on install
+// Static assets to cache on install (only truly static files)
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -33,9 +32,17 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE_NAME)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log('[SW] Caching static assets')
-        return cache.addAll(STATIC_ASSETS)
+        // Cache each asset individually to avoid failing on one broken asset
+        const results = await Promise.allSettled(
+          STATIC_ASSETS.map((asset) => cache.add(asset))
+        )
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.warn(`[SW] Failed to cache ${STATIC_ASSETS[index]}:`, result.reason)
+          }
+        })
       })
       .then(() => {
         console.log('[SW] Skip waiting')
