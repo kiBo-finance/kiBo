@@ -57,11 +57,12 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
         const data = await response.json()
         if (data.success) {
           // すべての口座を表示（プリペイドカードはどの口座からもチャージ可能）
-          setAccounts(data.data)
+          const fetchedAccounts = data.data as Account[]
+          setAccounts(fetchedAccounts)
 
           // デフォルトチャージ元口座が設定されていれば自動選択
           if (card?.defaultChargeAccountId) {
-            const defaultAccount = filteredAccounts.find(
+            const defaultAccount = fetchedAccounts.find(
               (account: Account) => account.id === card.defaultChargeAccountId
             )
             if (defaultAccount) {

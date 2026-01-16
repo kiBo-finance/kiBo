@@ -85,6 +85,16 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
     expiryDate: '',
   })
 
+  // プリペイドカードの場合、自動的に最初の口座を選択
+  useEffect(() => {
+    if (formData.type === 'PREPAID' && accounts.length > 0 && !formData.accountId) {
+      setFormData((prev) => ({ ...prev, accountId: accounts[0].id }))
+    }
+  }, [formData.type, accounts, formData.accountId])
+
+  // プリペイドカードかどうかのフラグ
+  const isPrepaid = formData.type === 'PREPAID'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -456,26 +466,29 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="account">関連口座 *</Label>
-              <Select
-                value={formData.accountId}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, accountId: value }))}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="口座を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name} ({account.currency})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className={isPrepaid ? '' : 'grid grid-cols-2 gap-4'}>
+            {/* プリペイドカードの場合は関連口座フィールドを非表示（自動選択） */}
+            {!isPrepaid && (
+              <div className="space-y-2">
+                <Label htmlFor="account">関連口座 *</Label>
+                <Select
+                  value={formData.accountId}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, accountId: value }))}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="口座を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name} ({account.currency})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="expiryDate">有効期限</Label>
               <Input
