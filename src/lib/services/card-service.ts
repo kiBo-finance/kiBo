@@ -83,35 +83,57 @@ export class CardService {
     }
 
     // カード作成データを構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const createData: any = {
+      name: input.name,
+      type: input.type,
+      lastFourDigits: input.lastFourDigits,
+      autoTransferEnabled: input.autoTransferEnabled || false,
+      user: { connect: { id: userId } },
+      account: { connect: { id: input.accountId } },
+    }
+
+    // オプションフィールドを明示的に追加
+    if (input.brand) {
+      createData.brand = input.brand
+    }
+    if (input.creditLimit !== undefined) {
+      createData.creditLimit = new Decimal(input.creditLimit)
+    }
+    if (input.billingDate !== undefined) {
+      createData.billingDate = input.billingDate
+    }
+    if (input.paymentDate !== undefined) {
+      createData.paymentDate = input.paymentDate
+    }
+    if (input.balance !== undefined) {
+      createData.balance = new Decimal(input.balance)
+    }
+    if (input.defaultChargeAccountId && input.defaultChargeAccountId.length > 0) {
+      createData.defaultChargeAccount = { connect: { id: input.defaultChargeAccountId } }
+    }
+    if (input.linkedAccountId && input.linkedAccountId.length > 0) {
+      createData.linkedAccount = { connect: { id: input.linkedAccountId } }
+    }
+    if (input.minBalance !== undefined) {
+      createData.minBalance = new Decimal(input.minBalance)
+    }
+    if (input.monthlyLimit !== undefined) {
+      createData.monthlyLimit = new Decimal(input.monthlyLimit)
+    }
+    if (input.settlementDay !== undefined) {
+      createData.settlementDay = input.settlementDay
+    }
+    if (input.expiryDate) {
+      createData.expiryDate = input.expiryDate
+    }
+
     const card = await prisma.card.create({
-      data: {
-        name: input.name,
-        type: input.type,
-        lastFourDigits: input.lastFourDigits,
-        autoTransferEnabled: input.autoTransferEnabled || false,
-        // リレーション
-        user: { connect: { id: userId } },
-        account: { connect: { id: input.accountId } },
-        // オプションフィールド
-        ...(input.brand && { brand: input.brand }),
-        ...(input.creditLimit !== undefined && { creditLimit: new Decimal(input.creditLimit) }),
-        ...(input.billingDate !== undefined && { billingDate: input.billingDate }),
-        ...(input.paymentDate !== undefined && { paymentDate: input.paymentDate }),
-        ...(input.balance !== undefined && { balance: new Decimal(input.balance) }),
-        ...(input.defaultChargeAccountId && {
-          defaultChargeAccount: { connect: { id: input.defaultChargeAccountId } },
-        }),
-        ...(input.linkedAccountId && {
-          linkedAccount: { connect: { id: input.linkedAccountId } },
-        }),
-        ...(input.minBalance !== undefined && { minBalance: new Decimal(input.minBalance) }),
-        ...(input.monthlyLimit !== undefined && { monthlyLimit: new Decimal(input.monthlyLimit) }),
-        ...(input.settlementDay !== undefined && { settlementDay: input.settlementDay }),
-        ...(input.expiryDate && { expiryDate: input.expiryDate }),
-      },
+      data: createData,
       include: {
         account: true,
         linkedAccount: true,
+        defaultChargeAccount: true,
       },
     })
 
