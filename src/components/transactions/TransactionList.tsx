@@ -52,6 +52,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface TransactionListProps {
   onEdit?: (transaction: Transaction) => void
@@ -94,7 +95,7 @@ export function TransactionList({
       setSelectedTransaction(null)
     } catch (error) {
       console.error('Delete error:', error)
-      alert('取引の削除に失敗しました')
+      toast.error('取引の削除に失敗しました')
     } finally {
       setLoading(false)
     }

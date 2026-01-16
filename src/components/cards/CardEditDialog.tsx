@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch'
 import { useAccounts } from '@/lib/hooks/useAccounts'
 import type { Card as PrismaCard, CardType } from '@prisma/client'
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 interface CardWithAccount extends PrismaCard {
   account: {
@@ -156,11 +157,11 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
         onSuccess()
         onOpenChange(false)
       } else {
-        alert(result.error || 'カードの更新に失敗しました')
+        toast.error(result.error || 'カードの更新に失敗しました')
       }
     } catch (error) {
       console.error('Failed to update card:', error)
-      alert('カードの更新に失敗しました')
+      toast.error('カードの更新に失敗しました')
     } finally {
       setLoading(false)
     }

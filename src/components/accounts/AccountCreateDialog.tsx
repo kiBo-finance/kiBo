@@ -40,6 +40,7 @@ import { useAtomValue } from 'jotai'
 import { Plus, CreditCard, Wallet, PiggyBank, Clock } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import * as z from 'zod'
 
 const ACCOUNT_TYPES = [
@@ -154,7 +155,7 @@ export function AccountCreateDialog({
       form.reset()
     } catch (error) {
       console.error('Account creation error:', error)
-      alert(error instanceof Error ? error.message : '口座作成に失敗しました')
+      toast.error(error instanceof Error ? error.message : '口座作成に失敗しました')
     } finally {
       setIsSubmitting(false)
     }

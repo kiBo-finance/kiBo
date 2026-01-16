@@ -53,6 +53,7 @@ import {
   MoreVertical,
 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface ScheduledTransactionListProps {
   onEdit?: (transaction: ScheduledTransaction) => void
@@ -127,7 +128,7 @@ export function ScheduledTransactionList({
       setSelectedTransaction(null)
     } catch (error) {
       console.error('Execute error:', error)
-      alert('予定取引の実行に失敗しました')
+      toast.error('予定取引の実行に失敗しました')
     } finally {
       setLoading(false)
     }
@@ -156,7 +157,7 @@ export function ScheduledTransactionList({
       setSelectedTransaction(null)
     } catch (error) {
       console.error('Delete error:', error)
-      alert('予定取引の削除に失敗しました')
+      toast.error('予定取引の削除に失敗しました')
     } finally {
       setLoading(false)
     }

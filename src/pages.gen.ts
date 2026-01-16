@@ -4,15 +4,21 @@
 import type { PathsForPages, GetConfigResponse } from 'waku/router';
 
 // prettier-ignore
+import type { getConfig as File_DashboardAccountsIdEdit_getConfig } from './pages/dashboard/accounts/[id]/edit';
+// prettier-ignore
 import type { getConfig as File_DashboardAccountsId_getConfig } from './pages/dashboard/accounts/[id]';
 // prettier-ignore
 import type { getConfig as File_DashboardAccountsIndex_getConfig } from './pages/dashboard/accounts/index';
 // prettier-ignore
 import type { getConfig as File_DashboardAccountsNew_getConfig } from './pages/dashboard/accounts/new';
 // prettier-ignore
+import type { getConfig as File_DashboardBudgetsIndex_getConfig } from './pages/dashboard/budgets/index';
+// prettier-ignore
 import type { getConfig as File_DashboardCardsIndex_getConfig } from './pages/dashboard/cards/index';
 // prettier-ignore
 import type { getConfig as File_DashboardIndex_getConfig } from './pages/dashboard/index';
+// prettier-ignore
+import type { getConfig as File_DashboardReportsIndex_getConfig } from './pages/dashboard/reports/index';
 // prettier-ignore
 import type { getConfig as File_DashboardScheduledIdEdit_getConfig } from './pages/dashboard/scheduled/[id]/edit';
 // prettier-ignore
@@ -38,11 +44,14 @@ import type { getConfig as File_Signup_getConfig } from './pages/signup';
 
 // prettier-ignore
 type Page =
+| ({ path: '/dashboard/accounts/[id]/edit' } & GetConfigResponse<typeof File_DashboardAccountsIdEdit_getConfig>)
 | ({ path: '/dashboard/accounts/[id]' } & GetConfigResponse<typeof File_DashboardAccountsId_getConfig>)
 | ({ path: '/dashboard/accounts' } & GetConfigResponse<typeof File_DashboardAccountsIndex_getConfig>)
 | ({ path: '/dashboard/accounts/new' } & GetConfigResponse<typeof File_DashboardAccountsNew_getConfig>)
+| ({ path: '/dashboard/budgets' } & GetConfigResponse<typeof File_DashboardBudgetsIndex_getConfig>)
 | ({ path: '/dashboard/cards' } & GetConfigResponse<typeof File_DashboardCardsIndex_getConfig>)
 | ({ path: '/dashboard' } & GetConfigResponse<typeof File_DashboardIndex_getConfig>)
+| ({ path: '/dashboard/reports' } & GetConfigResponse<typeof File_DashboardReportsIndex_getConfig>)
 | ({ path: '/dashboard/scheduled/[id]/edit' } & GetConfigResponse<typeof File_DashboardScheduledIdEdit_getConfig>)
 | ({ path: '/dashboard/scheduled/[id]' } & GetConfigResponse<typeof File_DashboardScheduledId_getConfig>)
 | ({ path: '/dashboard/scheduled/calendar' } & GetConfigResponse<typeof File_DashboardScheduledCalendar_getConfig>)

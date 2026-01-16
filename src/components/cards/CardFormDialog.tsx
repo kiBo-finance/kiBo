@@ -18,6 +18,7 @@ import { useAccounts } from '@/lib/hooks/useAccounts'
 import { useCards } from '@/lib/hooks/useCards'
 import type { CardType } from '@prisma/client'
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 interface CreateCardPayload {
   name: string
@@ -165,11 +166,11 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
           expiryDate: '',
         })
       } else {
-        alert(result.error || 'カードの作成に失敗しました')
+        toast.error(result.error || 'カードの作成に失敗しました')
       }
     } catch (error) {
       console.error('Failed to create card:', error)
-      alert('カードの作成に失敗しました')
+      toast.error('カードの作成に失敗しました')
     } finally {
       setLoading(false)
     }

@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import type { Card, CardType } from '@prisma/client'
 import type { Decimal } from 'decimal.js'
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 interface CardWithAccount extends Card {
   account: {
@@ -103,11 +104,11 @@ export function PaymentDialog({ card, open, onOpenChange, onSuccess }: PaymentDi
           currency: card?.account?.currency || 'JPY',
         })
       } else {
-        alert(data.error || '支払い処理に失敗しました')
+        toast.error(data.error || '支払い処理に失敗しました')
       }
     } catch (error) {
       console.error('Payment failed:', error)
-      alert('支払い処理に失敗しました')
+      toast.error('支払い処理に失敗しました')
     } finally {
       setLoading(false)
     }

@@ -17,6 +17,7 @@ import type { Card } from '@prisma/client'
 import { Plus, Wallet, CreditCard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Link } from 'waku/router/client'
+import { toast } from 'sonner'
 
 interface CardWithAccount extends Card {
   account: {
@@ -164,11 +165,11 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
           sourceType: '',
         })
       } else {
-        alert(data.error || 'チャージに失敗しました')
+        toast.error(data.error || 'チャージに失敗しました')
       }
     } catch (error) {
       console.error('Charge failed:', error)
-      alert('チャージに失敗しました')
+      toast.error('チャージに失敗しました')
     } finally {
       setLoading(false)
     }

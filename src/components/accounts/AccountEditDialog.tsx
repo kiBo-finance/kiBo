@@ -40,6 +40,7 @@ import { useAtomValue } from 'jotai'
 import { Edit, CreditCard, Wallet, PiggyBank, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import * as z from 'zod'
 
 const ACCOUNT_TYPES = [
@@ -159,7 +160,7 @@ export function AccountEditDialog({
       onOpenChange(false)
     } catch (error) {
       console.error('Account update error:', error)
-      alert(error instanceof Error ? error.message : '口座更新に失敗しました')
+      toast.error(error instanceof Error ? error.message : '口座更新に失敗しました')
     } finally {
       setIsSubmitting(false)
     }

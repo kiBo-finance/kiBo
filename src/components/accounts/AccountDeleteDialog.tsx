@@ -16,6 +16,7 @@ import { formatCurrency, createCurrencyAmount } from '@/lib/utils/currency'
 import { useAtomValue } from 'jotai'
 import { Trash2, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface AccountDeleteDialogProps {
   accountId: string | null
@@ -59,7 +60,7 @@ export function AccountDeleteDialog({
       onOpenChange(false)
     } catch (error) {
       console.error('Account delete error:', error)
-      alert(error instanceof Error ? error.message : '口座削除に失敗しました')
+      toast.error(error instanceof Error ? error.message : '口座削除に失敗しました')
     } finally {
       setIsDeleting(false)
     }
