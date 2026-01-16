@@ -326,13 +326,11 @@ export function CardFormDialog({ open, onOpenChange, onSuccess }: CardFormDialog
                     <SelectValue placeholder="口座を選択（任意）" />
                   </SelectTrigger>
                   <SelectContent>
-                    {accounts
-                      .filter((account) => account.id !== formData.accountId)
-                      .map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name} ({account.currency})
-                        </SelectItem>
-                      ))}
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name} ({account.currency})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">

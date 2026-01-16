@@ -313,23 +313,24 @@ export function CardEditDialog({ card, open, onOpenChange, onSuccess }: CardEdit
               <div className="space-y-2">
                 <Label htmlFor="defaultChargeAccount">デフォルトチャージ元口座</Label>
                 <Select
-                  value={formData.defaultChargeAccountId}
+                  value={formData.defaultChargeAccountId || '_none'}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, defaultChargeAccountId: value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      defaultChargeAccountId: value === '_none' ? '' : value,
+                    }))
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="口座を選択（任意）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">なし</SelectItem>
-                    {accounts
-                      .filter((account) => account.id !== card.accountId)
-                      .map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name} ({account.currency})
-                        </SelectItem>
-                      ))}
+                    <SelectItem value="_none">なし</SelectItem>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name} ({account.currency})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">

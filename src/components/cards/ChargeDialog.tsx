@@ -192,12 +192,7 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
                 <SelectContent>
                   {accounts.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
-                      <div className="flex w-full items-center justify-between">
-                        <span>{account.name}</span>
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          {formatCurrency(account.balance, account.currency)}
-                        </span>
-                      </div>
+                      {account.name} ({formatCurrency(account.balance, account.currency)})
                     </SelectItem>
                   ))}
                 </SelectContent>
