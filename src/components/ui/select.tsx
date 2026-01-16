@@ -9,9 +9,12 @@ import {
   ListBoxItem,
   Popover,
   Label,
+  Section,
+  Header,
   composeRenderProps,
   type SelectProps as AriaSelectProps,
   type ListBoxItemProps,
+  type SectionProps,
 } from 'react-aria-components'
 import { Check, ChevronDown } from 'lucide-react'
 import * as React from 'react'
@@ -74,14 +77,19 @@ function Select<T extends object>({
   )
 }
 
-// SelectGroup - use section for grouping
-const SelectGroup = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('', className)} role="group" {...props} />
-))
-SelectGroup.displayName = 'SelectGroup'
+// SelectGroup - use React Aria Section for proper ListBox integration
+interface SelectGroupProps extends Omit<SectionProps<object>, 'className'> {
+  className?: string
+  children?: React.ReactNode
+}
+
+function SelectGroup({ className, children, ...props }: SelectGroupProps) {
+  return (
+    <Section className={cn('', className)} {...props}>
+      {children}
+    </Section>
+  )
+}
 
 // SelectValue wrapper
 interface SelectValueProps {
@@ -147,14 +155,14 @@ function SelectContent({ className, children }: SelectContentProps) {
   )
 }
 
-// SelectLabel
+// SelectLabel - use React Aria Header for proper Section integration
 interface SelectLabelProps {
   className?: string
   children?: React.ReactNode
 }
 
 function SelectLabel({ className, children }: SelectLabelProps) {
-  return <Label className={cn('py-1.5 pl-8 pr-2 text-sm font-semibold', className)}>{children}</Label>
+  return <Header className={cn('py-1.5 pl-8 pr-2 text-sm font-semibold text-muted-foreground', className)}>{children}</Header>
 }
 
 // SelectItem
