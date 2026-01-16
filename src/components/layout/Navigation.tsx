@@ -12,7 +12,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { Link } from 'waku/router/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 const navigationItems = [
   {
@@ -74,12 +74,39 @@ interface NavigationProps {
 export function Navigation({ className, isMobile = false, onNavigate }: NavigationProps) {
   const [pathname, setPathname] = useState('')
 
-  useEffect(() => {
-    // Get pathname from window.location on client side
+  const updatePathname = useCallback(() => {
     if (typeof window !== 'undefined') {
       setPathname(window.location.pathname)
     }
   }, [])
+
+  useEffect(() => {
+    // Get pathname on initial load
+    updatePathname()
+
+    // Listen for browser back/forward navigation
+    window.addEventListener('popstate', updatePathname)
+
+    // Listen for programmatic navigation (pushState/replaceState)
+    const originalPushState = history.pushState
+    const originalReplaceState = history.replaceState
+
+    history.pushState = function (...args) {
+      originalPushState.apply(this, args)
+      updatePathname()
+    }
+
+    history.replaceState = function (...args) {
+      originalReplaceState.apply(this, args)
+      updatePathname()
+    }
+
+    return () => {
+      window.removeEventListener('popstate', updatePathname)
+      history.pushState = originalPushState
+      history.replaceState = originalReplaceState
+    }
+  }, [updatePathname])
 
   // Check if current path matches the navigation item
   // For /dashboard, only match exactly; for others, match if path starts with href
