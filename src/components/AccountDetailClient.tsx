@@ -52,7 +52,8 @@ export function AccountDetailClient({ id }: AccountDetailClientProps) {
         // 口座データ取得
         const accountsRes = await fetch('/api/accounts')
         if (accountsRes.ok) {
-          const accounts = await accountsRes.json()
+          const json = await accountsRes.json()
+          const accounts = json.success ? json.data : json
           setAccounts(accounts)
         }
       } catch (error) {

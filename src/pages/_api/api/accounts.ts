@@ -68,10 +68,13 @@ export async function GET(request: Request): Promise<Response> {
       orderBy: [{ type: 'asc' }, { name: 'asc' }],
     })
 
-    return Response.json(accounts)
+    return Response.json({
+      success: true,
+      data: accounts,
+    })
   } catch (error) {
     console.error('Failed to fetch accounts:', error)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 

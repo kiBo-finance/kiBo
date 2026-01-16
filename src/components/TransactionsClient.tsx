@@ -70,8 +70,9 @@ export function TransactionsClient() {
         }
 
         if (accountsRes.ok) {
-          const accounts = await accountsRes.json()
-          setAccounts(accounts.data)
+          const json = await accountsRes.json()
+          const accounts = json.success ? json.data : (json.data || json)
+          setAccounts(accounts)
         }
 
         if (transactionsRes.ok) {

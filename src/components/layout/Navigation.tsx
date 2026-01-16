@@ -81,12 +81,21 @@ export function Navigation({ className, isMobile = false, onNavigate }: Navigati
     }
   }, [])
 
+  // Check if current path matches the navigation item
+  // For /dashboard, only match exactly; for others, match if path starts with href
+  const isPathActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard'
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
   // Mobile navigation (shown in hamburger menu dropdown)
   if (isMobile) {
     return (
       <nav className={cn('space-y-1 px-4 py-2', className)}>
         {navigationItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = isPathActive(item.href)
           return (
             <Link
               key={item.href}
@@ -115,7 +124,7 @@ export function Navigation({ className, isMobile = false, onNavigate }: Navigati
   return (
     <nav className={cn('space-x-1 lg:space-x-2', className)}>
       {navigationItems.map((item) => {
-        const isActive = pathname === item.href
+        const isActive = isPathActive(item.href)
         return (
           <Link
             key={item.href}

@@ -14,7 +14,8 @@ export function useAccounts() {
         credentials: 'include',
       })
       if (response.ok) {
-        const data = await response.json()
+        const json = await response.json()
+        const data = json.success ? json.data : json
         if (Array.isArray(data)) {
           setAccounts(data)
         }
