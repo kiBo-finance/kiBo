@@ -82,27 +82,31 @@ export class CardService {
       }
     }
 
-    // カード作成
+    // カード作成データを構築（undefinedを避ける）
+    const createData: Parameters<typeof prisma.card.create>[0]['data'] = {
+      name: input.name,
+      type: input.type,
+      lastFourDigits: input.lastFourDigits,
+      accountId: input.accountId,
+      userId,
+      autoTransferEnabled: input.autoTransferEnabled || false,
+    }
+
+    // オプションフィールドを条件付きで追加
+    if (input.brand) createData.brand = input.brand
+    if (input.creditLimit !== undefined) createData.creditLimit = new Decimal(input.creditLimit)
+    if (input.billingDate !== undefined) createData.billingDate = input.billingDate
+    if (input.paymentDate !== undefined) createData.paymentDate = input.paymentDate
+    if (input.balance !== undefined) createData.balance = new Decimal(input.balance)
+    if (input.defaultChargeAccountId) createData.defaultChargeAccountId = input.defaultChargeAccountId
+    if (input.linkedAccountId) createData.linkedAccountId = input.linkedAccountId
+    if (input.minBalance !== undefined) createData.minBalance = new Decimal(input.minBalance)
+    if (input.monthlyLimit !== undefined) createData.monthlyLimit = new Decimal(input.monthlyLimit)
+    if (input.settlementDay !== undefined) createData.settlementDay = input.settlementDay
+    if (input.expiryDate) createData.expiryDate = input.expiryDate
+
     const card = await prisma.card.create({
-      data: {
-        name: input.name,
-        type: input.type,
-        brand: input.brand,
-        lastFourDigits: input.lastFourDigits,
-        accountId: input.accountId,
-        userId,
-        creditLimit: input.creditLimit ? new Decimal(input.creditLimit) : undefined,
-        billingDate: input.billingDate,
-        paymentDate: input.paymentDate,
-        balance: input.balance ? new Decimal(input.balance) : undefined,
-        defaultChargeAccountId: input.defaultChargeAccountId,
-        linkedAccountId: input.linkedAccountId,
-        autoTransferEnabled: input.autoTransferEnabled || false,
-        minBalance: input.minBalance ? new Decimal(input.minBalance) : undefined,
-        monthlyLimit: input.monthlyLimit ? new Decimal(input.monthlyLimit) : undefined,
-        settlementDay: input.settlementDay,
-        expiryDate: input.expiryDate,
-      },
+      data: createData,
       include: {
         account: true,
         linkedAccount: true,
