@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import type { Card } from '@prisma/client'
-import { Plus } from 'lucide-react'
+import { Plus, Wallet, CreditCard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Link } from 'waku/router/client'
 
@@ -37,61 +39,110 @@ interface Account {
   balance: string
 }
 
+interface PrepaidCard {
+  id: string
+  name: string
+  lastFourDigits: string
+  balance: string
+  account: {
+    currency: string
+  }
+}
+
+type SourceType = 'account' | 'card'
+
 export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDialogProps) {
   const [loading, setLoading] = useState(false)
-  const [accountsLoading, setAccountsLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(false)
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [cards, setCards] = useState<PrepaidCard[]>([])
   const [formData, setFormData] = useState({
     amount: '',
-    fromAccountId: '',
+    sourceId: '',
+    sourceType: '' as SourceType | '',
   })
 
   useEffect(() => {
-    const fetchAccounts = async () => {
-      setAccountsLoading(true)
-      // まずフォームをリセット
-      setFormData({ amount: '', fromAccountId: '' })
+    const fetchData = async () => {
+      setDataLoading(true)
+      // フォームをリセット
+      setFormData({ amount: '', sourceId: '', sourceType: '' })
 
       try {
-        const response = await fetch('/api/accounts')
-        const data = await response.json()
-        if (data.success) {
-          // すべての口座を表示（プリペイドカードはどの口座からもチャージ可能）
-          const fetchedAccounts = data.data as Account[]
-          setAccounts(fetchedAccounts)
+        // 口座とカードを並列で取得
+        const [accountsRes, cardsRes] = await Promise.all([
+          fetch('/api/accounts'),
+          fetch('/api/cards'),
+        ])
 
-          // デフォルトチャージ元口座が設定されていれば自動選択
-          if (card?.defaultChargeAccountId) {
-            const defaultAccount = fetchedAccounts.find(
-              (account: Account) => account.id === card.defaultChargeAccountId
-            )
-            if (defaultAccount) {
-              setFormData({ amount: '', fromAccountId: card.defaultChargeAccountId })
-            }
+        const accountsData = await accountsRes.json()
+        const cardsData = await cardsRes.json()
+
+        if (accountsData.success) {
+          setAccounts(accountsData.data as Account[])
+        }
+
+        if (cardsData.success) {
+          // 自分自身以外のプリペイドカードで残高があるもののみ
+          const prepaidCards = (cardsData.data as PrepaidCard[]).filter(
+            (c) =>
+              c.id !== card?.id &&
+              parseFloat(c.balance || '0') > 0
+          )
+          setCards(prepaidCards)
+        }
+
+        // デフォルトチャージ元口座が設定されていれば自動選択
+        if (card?.defaultChargeAccountId && accountsData.success) {
+          const defaultAccount = (accountsData.data as Account[]).find(
+            (account) => account.id === card.defaultChargeAccountId
+          )
+          if (defaultAccount) {
+            setFormData({
+              amount: '',
+              sourceId: `account:${card.defaultChargeAccountId}`,
+              sourceType: 'account',
+            })
           }
         }
       } catch (error) {
-        console.error('Failed to fetch accounts:', error)
+        console.error('Failed to fetch data:', error)
       } finally {
-        setAccountsLoading(false)
+        setDataLoading(false)
       }
     }
 
     if (open && card) {
-      fetchAccounts()
+      fetchData()
     }
   }, [open, card?.id, card?.accountId, card?.defaultChargeAccountId])
 
+  const handleSourceChange = (value: string) => {
+    const [type, id] = value.split(':') as [SourceType, string]
+    setFormData((prev) => ({
+      ...prev,
+      sourceId: value,
+      sourceType: type,
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!card) return
+    if (!card || !formData.sourceId) return
 
     setLoading(true)
 
     try {
-      const payload = {
+      const [sourceType, sourceId] = formData.sourceId.split(':') as [SourceType, string]
+
+      const payload: { amount: number; fromAccountId?: string; fromCardId?: string } = {
         amount: parseFloat(formData.amount),
-        fromAccountId: formData.fromAccountId,
+      }
+
+      if (sourceType === 'account') {
+        payload.fromAccountId = sourceId
+      } else {
+        payload.fromCardId = sourceId
       }
 
       const response = await fetch(`/api/cards/${card.id}/charge`, {
@@ -109,7 +160,8 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
         onOpenChange(false)
         setFormData({
           amount: '',
-          fromAccountId: '',
+          sourceId: '',
+          sourceType: '',
         })
       } else {
         alert(data.error || 'チャージに失敗しました')
@@ -131,10 +183,42 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
     return formatter.format(parseFloat(amount))
   }
 
-  const selectedAccount = accounts.find((account) => account.id === formData.fromAccountId)
+  // 選択されたソースの残高を取得
+  const getSelectedSourceBalance = (): string | null => {
+    if (!formData.sourceId) return null
+
+    const [type, id] = formData.sourceId.split(':') as [SourceType, string]
+
+    if (type === 'account') {
+      const account = accounts.find((a) => a.id === id)
+      return account?.balance || null
+    } else {
+      const sourceCard = cards.find((c) => c.id === id)
+      return sourceCard?.balance || null
+    }
+  }
+
+  const getSelectedSourceCurrency = (): string => {
+    if (!formData.sourceId) return 'JPY'
+
+    const [type, id] = formData.sourceId.split(':') as [SourceType, string]
+
+    if (type === 'account') {
+      const account = accounts.find((a) => a.id === id)
+      return account?.currency || 'JPY'
+    } else {
+      const sourceCard = cards.find((c) => c.id === id)
+      return sourceCard?.account?.currency || 'JPY'
+    }
+  }
+
+  const selectedBalance = getSelectedSourceBalance()
+  const selectedCurrency = getSelectedSourceCurrency()
   const currentBalance = card?.balance ? parseFloat(String(card.balance)) : 0
   const chargeAmount = parseFloat(formData.amount || '0')
   const newBalance = currentBalance + chargeAmount
+
+  const hasNoSources = accounts.length === 0 && cards.length === 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -156,19 +240,17 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fromAccount">チャージ元口座 *</Label>
-            {accountsLoading ? (
+            <Label htmlFor="source">チャージ元 *</Label>
+            {dataLoading ? (
               <div className="flex h-10 items-center justify-center rounded-md border">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <span className="ml-2 text-sm text-muted-foreground">口座を読み込み中...</span>
+                <span className="ml-2 text-sm text-muted-foreground">読み込み中...</span>
               </div>
-            ) : accounts.length === 0 ? (
+            ) : hasNoSources ? (
               <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
                 <div className="space-y-2 text-sm text-yellow-800">
                   <p>
-                    チャージ可能な口座がありません。
-                    <br />
-                    プリペイドカードにチャージするには、カードに紐付いた口座とは別の口座が必要です。
+                    チャージ可能な口座またはカードがありません。
                   </p>
                   <Link
                     to={'/dashboard/accounts/new' as never}
@@ -182,25 +264,46 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
               </div>
             ) : (
               <Select
-                value={formData.fromAccountId}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, fromAccountId: value }))}
+                value={formData.sourceId}
+                onValueChange={handleSourceChange}
                 required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="口座を選択" />
+                  <SelectValue placeholder="チャージ元を選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name} ({formatCurrency(account.balance, account.currency)})
-                    </SelectItem>
-                  ))}
+                  {accounts.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="flex items-center gap-2">
+                        <Wallet size={14} />
+                        口座
+                      </SelectLabel>
+                      {accounts.map((account) => (
+                        <SelectItem key={`account:${account.id}`} value={`account:${account.id}`}>
+                          {account.name} ({formatCurrency(account.balance, account.currency)})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                  {cards.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel className="flex items-center gap-2">
+                        <CreditCard size={14} />
+                        プリペイドカード
+                      </SelectLabel>
+                      {cards.map((c) => (
+                        <SelectItem key={`card:${c.id}`} value={`card:${c.id}`}>
+                          {c.name} •{c.lastFourDigits} ({formatCurrency(c.balance, c.account.currency)})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
                 </SelectContent>
               </Select>
             )}
-            {selectedAccount && (
+            {selectedBalance && (
               <div className="text-sm text-muted-foreground">
-                残高: {formatCurrency(selectedAccount.balance, selectedAccount.currency)}
+                残高: {formatCurrency(selectedBalance, selectedCurrency)}
               </div>
             )}
           </div>
@@ -212,7 +315,7 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
               type="number"
               step="0.01"
               min="0.01"
-              max={selectedAccount?.balance}
+              max={selectedBalance || undefined}
               value={formData.amount}
               onChange={(e) => setFormData((prev) => ({ ...prev, amount: e.target.value }))}
               placeholder="0.00"
@@ -235,11 +338,11 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
             </div>
           )}
 
-          {selectedAccount &&
+          {selectedBalance &&
             formData.amount &&
-            parseFloat(formData.amount) > parseFloat(selectedAccount.balance) && (
+            parseFloat(formData.amount) > parseFloat(selectedBalance) && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                <div className="text-sm text-red-800">チャージ金額が口座残高を超えています</div>
+                <div className="text-sm text-red-800">チャージ金額が残高を超えています</div>
               </div>
             )}
 
@@ -256,12 +359,12 @@ export function ChargeDialog({ card, open, onOpenChange, onSuccess }: ChargeDial
               type="submit"
               disabled={
                 loading ||
-                accountsLoading ||
-                accounts.length === 0 ||
+                dataLoading ||
+                hasNoSources ||
                 !formData.amount ||
-                !formData.fromAccountId ||
-                (selectedAccount &&
-                  parseFloat(formData.amount) > parseFloat(selectedAccount.balance))
+                !formData.sourceId ||
+                (selectedBalance !== null &&
+                  parseFloat(formData.amount) > parseFloat(selectedBalance))
               }
             >
               {loading ? 'チャージ中...' : 'チャージ実行'}

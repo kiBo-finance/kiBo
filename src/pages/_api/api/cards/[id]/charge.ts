@@ -14,10 +14,18 @@ function getIdFromUrl(request: Request): string | null {
   return null
 }
 
-const ChargeSchema = z.object({
-  amount: z.number().positive(),
-  fromAccountId: z.string(),
-})
+const ChargeSchema = z
+  .object({
+    amount: z.number().positive(),
+    fromAccountId: z.string().optional(),
+    fromCardId: z.string().optional(),
+  })
+  .refine((data) => data.fromAccountId || data.fromCardId, {
+    message: 'Either fromAccountId or fromCardId is required',
+  })
+  .refine((data) => !(data.fromAccountId && data.fromCardId), {
+    message: 'Cannot specify both fromAccountId and fromCardId',
+  })
 
 export async function POST(request: Request) {
   try {
@@ -37,12 +45,23 @@ export async function POST(request: Request) {
     const validatedData = ChargeSchema.parse(body)
     const user = session.user as SessionUser
 
-    await CardService.chargePrepaidCard(
-      user.id,
-      id,
-      validatedData.amount,
-      validatedData.fromAccountId
-    )
+    if (validatedData.fromCardId) {
+      // カード間チャージ
+      await CardService.chargePrepaidCardFromCard(
+        user.id,
+        id,
+        validatedData.amount,
+        validatedData.fromCardId
+      )
+    } else if (validatedData.fromAccountId) {
+      // 口座からチャージ
+      await CardService.chargePrepaidCard(
+        user.id,
+        id,
+        validatedData.amount,
+        validatedData.fromAccountId
+      )
+    }
 
     return Response.json({
       success: true,
