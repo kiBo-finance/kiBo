@@ -1,4 +1,4 @@
-import { ScheduledClient } from '../../../components/ScheduledClient'
+import { ScheduledClient } from '@/components/ScheduledClient'
 
 export default function ScheduledPage() {
   return <ScheduledClient />

@@ -1,4 +1,4 @@
-import { AccountDetailClient } from '../../../components/AccountDetailClient'
+import { AccountDetailClient } from '@/components/AccountDetailClient'
 
 export default function AccountDetailPage({ id }: { id: string }) {
   return <AccountDetailClient id={id} />

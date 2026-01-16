@@ -1,6 +1,6 @@
 'use client'
 
-import { SignUpForm } from './auth/SignUpForm'
+import { SignUpForm } from '@/components/auth/SignUpForm'
 import { useRouter } from 'waku/router/client'
 
 export function SignupClient() {

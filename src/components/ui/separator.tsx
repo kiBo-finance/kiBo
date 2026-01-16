@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '../../lib/utils'
+import { cn } from '@/lib/utils'
 import { Separator as AriaSeparator } from 'react-aria-components'
 import * as React from 'react'
 

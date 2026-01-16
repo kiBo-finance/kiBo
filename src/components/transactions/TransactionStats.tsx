@@ -1,9 +1,9 @@
 'use client'
 
-import { Badge } from '../ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
-import { Progress } from '../ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Decimal from 'decimal.js'
 import { BarChart3, PieChart, TrendingUp, TrendingDown, Calendar, DollarSign } from 'lucide-react'
 import { useEffect, useState } from 'react'

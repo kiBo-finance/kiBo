@@ -1,4 +1,4 @@
-import { ScheduledCalendarClient } from '../../../components/ScheduledCalendarClient'
+import { ScheduledCalendarClient } from '@/components/ScheduledCalendarClient'
 
 export default function ScheduledCalendarPage() {
   return <ScheduledCalendarClient />

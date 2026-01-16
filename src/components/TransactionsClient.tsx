@@ -1,16 +1,16 @@
 'use client'
 
-import { ScheduledTransactionList } from './transactions/ScheduledTransactionList'
-import { TransactionFilters } from './transactions/TransactionFilters'
-import { TransactionForm } from './transactions/TransactionForm'
-import { TransactionList } from './transactions/TransactionList'
-import { TransactionStats } from './transactions/TransactionStats'
-import { Button } from './ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { accountsAtom } from '../lib/atoms/accounts'
-import { currenciesAtom } from '../lib/atoms/currency'
+import { ScheduledTransactionList } from '@/components/transactions/ScheduledTransactionList'
+import { TransactionFilters } from '@/components/transactions/TransactionFilters'
+import { TransactionForm } from '@/components/transactions/TransactionForm'
+import { TransactionList } from '@/components/transactions/TransactionList'
+import { TransactionStats } from '@/components/transactions/TransactionStats'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { accountsAtom } from '@/lib/atoms/accounts'
+import { currenciesAtom } from '@/lib/atoms/currency'
 import {
   transactionsAtom,
   scheduledTransactionsAtom,
@@ -20,7 +20,7 @@ import {
   overdueScheduledTransactionsAtom,
   type Transaction,
   type ScheduledTransaction,
-} from '../lib/atoms/transactions'
+} from '@/lib/atoms/transactions'
 import Decimal from 'decimal.js'
 import { useSetAtom, useAtomValue } from 'jotai'
 import {

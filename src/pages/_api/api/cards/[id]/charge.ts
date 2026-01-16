@@ -1,6 +1,6 @@
-import { auth } from '../../../../../lib/auth'
-import { CardService } from '../../../../../lib/services/card-service'
-import type { SessionUser } from '../../../../../lib/types/auth'
+import { auth } from '@/lib/auth'
+import { CardService } from '@/lib/services/card-service'
+import type { SessionUser } from '@/lib/types/auth'
 import { z } from 'zod'
 
 function getIdFromUrl(request: Request): string | null {

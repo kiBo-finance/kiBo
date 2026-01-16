@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { DashboardLayoutClient } from '../../components/DashboardLayoutClient'
+import { DashboardLayoutClient } from '@/components/DashboardLayoutClient'
 
 type DashboardLayoutProps = { children: ReactNode }
 

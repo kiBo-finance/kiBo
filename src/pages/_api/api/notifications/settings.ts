@@ -1,6 +1,6 @@
-import { auth } from '../../../../lib/auth'
-import { prisma } from '../../../../lib/db'
-import type { SessionUser } from '../../../../lib/types/auth'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import type { SessionUser } from '@/lib/types/auth'
 import { z } from 'zod'
 
 const NotificationSettingsSchema = z.object({

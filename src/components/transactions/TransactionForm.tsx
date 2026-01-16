@@ -1,33 +1,33 @@
 'use client'
 
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Calendar } from '../ui/calendar'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
-import { Textarea } from '../ui/textarea'
-import { accountsAtom } from '../../lib/atoms/accounts'
-import { currenciesAtom } from '../../lib/atoms/currency'
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { accountsAtom } from '@/lib/atoms/accounts'
+import { currenciesAtom } from '@/lib/atoms/currency'
 import {
   transactionFormAtom,
   transactionLoadingAtom,
   transactionErrorAtom,
   transactionsAtom,
   type TransactionFormData,
-} from '../../lib/atoms/transactions'
-import { cn } from '../../lib/utils'
-import { saveOfflineTransaction } from '../../lib/offline-store'
-import { isOnline } from '../../lib/sync-service'
-import { useServiceWorker } from '../providers/ServiceWorkerProvider'
+} from '@/lib/atoms/transactions'
+import { cn } from '@/lib/utils'
+import { saveOfflineTransaction } from '@/lib/offline-store'
+import { isOnline } from '@/lib/sync-service'
+import { useServiceWorker } from '@/components/providers/ServiceWorkerProvider'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { useAtom, useAtomValue } from 'jotai'

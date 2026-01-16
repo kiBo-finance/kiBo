@@ -1,8 +1,8 @@
 'use client'
 
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Card, CardContent } from '../ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog'
+} from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -19,21 +19,21 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../ui/form'
-import { Input } from '../ui/input'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
-import { Switch } from '../ui/switch'
-import { Textarea } from '../ui/textarea'
-import { accountsAtom } from '../../lib/atoms/accounts'
-import { activeCurrenciesAtom } from '../../lib/atoms/currency'
-import { useAccounts } from '../../lib/hooks/useAccounts'
-import { cn } from '../../lib/utils'
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
+import { accountsAtom } from '@/lib/atoms/accounts'
+import { activeCurrenciesAtom } from '@/lib/atoms/currency'
+import { useAccounts } from '@/lib/hooks/useAccounts'
+import { cn } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { AppAccount } from '@prisma/client'
 import { useAtomValue } from 'jotai'

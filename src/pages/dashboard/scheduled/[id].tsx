@@ -1,4 +1,4 @@
-import { ScheduledDetailClient } from '../../../components/ScheduledDetailClient'
+import { ScheduledDetailClient } from '@/components/ScheduledDetailClient'
 
 export default function ScheduledDetailPage({ id }: { id: string }) {
   return <ScheduledDetailClient id={id} />

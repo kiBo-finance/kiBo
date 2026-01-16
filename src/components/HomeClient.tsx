@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'waku/router/client'
-import { useAuth } from './providers/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 
 export function HomeClient() {
   const router = useRouter()

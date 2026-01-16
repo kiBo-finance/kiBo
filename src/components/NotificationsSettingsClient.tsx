@@ -1,6 +1,6 @@
 'use client'
 
-import { NotificationSettings } from './notifications/NotificationSettings'
+import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 
 export function NotificationsSettingsClient() {
   return (

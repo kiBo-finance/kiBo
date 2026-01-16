@@ -1,18 +1,18 @@
 'use client'
 
 import { CurrencySelect } from './CurrencySelect'
-import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   exchangeRateManagerAtom,
   baseCurrencyAtom,
   addRecentCurrencyAtom,
   currencyMapAtom,
-} from '../../lib/atoms/currency'
-import { cn } from '../../lib/utils'
-import { CurrencyAmount, calculateRateChange } from '../../lib/utils/currency'
+} from '@/lib/atoms/currency'
+import { cn } from '@/lib/utils'
+import { CurrencyAmount, calculateRateChange } from '@/lib/utils/currency'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { ArrowUpDown, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
 import { useState, useEffect } from 'react'

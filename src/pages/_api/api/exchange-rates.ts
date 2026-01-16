@@ -1,5 +1,5 @@
-import { auth } from '../../../lib/auth'
-import { prisma } from '../../../lib/db'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
 import { Decimal } from 'decimal.js'
 import { z } from 'zod'

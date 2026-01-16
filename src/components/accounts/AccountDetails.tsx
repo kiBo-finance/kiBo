@@ -1,18 +1,18 @@
 'use client'
 
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import { accountsAtom } from '../../lib/atoms/accounts'
-import { cn } from '../../lib/utils'
-import { formatCurrency, createCurrencyAmount } from '../../lib/utils/currency'
+} from '@/components/ui/dropdown-menu'
+import { accountsAtom } from '@/lib/atoms/accounts'
+import { cn } from '@/lib/utils'
+import { formatCurrency, createCurrencyAmount } from '@/lib/utils/currency'
 import { useAtomValue } from 'jotai'
 import {
   CreditCard,

@@ -1,7 +1,7 @@
 'use client'
 
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog'
-import { accountsAtom } from '../../lib/atoms/accounts'
-import { useAccounts } from '../../lib/hooks/useAccounts'
-import { formatCurrency, createCurrencyAmount } from '../../lib/utils/currency'
+} from '@/components/ui/dialog'
+import { accountsAtom } from '@/lib/atoms/accounts'
+import { useAccounts } from '@/lib/hooks/useAccounts'
+import { formatCurrency, createCurrencyAmount } from '@/lib/utils/currency'
 import { useAtomValue } from 'jotai'
 import { Trash2, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'

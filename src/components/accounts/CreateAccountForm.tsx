@@ -1,8 +1,8 @@
 'use client'
 
-import { CurrencySelect } from '../currency/CurrencySelect'
-import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { CurrencySelect } from '@/components/currency/CurrencySelect'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -11,20 +11,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../ui/form'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
-import { Textarea } from '../ui/textarea'
-import { addAccountAtom } from '../../lib/atoms/accounts'
-import { activeCurrenciesAtom, baseCurrencyAtom } from '../../lib/atoms/currency'
-import { cn } from '../../lib/utils'
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { addAccountAtom } from '@/lib/atoms/accounts'
+import { activeCurrenciesAtom, baseCurrencyAtom } from '@/lib/atoms/currency'
+import { cn } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { Wallet, CreditCard, PiggyBank, Clock, Plus } from 'lucide-react'

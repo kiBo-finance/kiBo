@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '../../lib/utils'
+import { cn } from '@/lib/utils'
 import { ProgressBar as AriaProgressBar, composeRenderProps } from 'react-aria-components'
 import * as React from 'react'
 

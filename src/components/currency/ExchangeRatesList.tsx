@@ -1,16 +1,16 @@
 'use client'
 
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   exchangeRatesAtom,
   baseCurrencyAtom,
   popularCurrencyPairsAtom,
   currencyMapAtom,
   exchangeRateLastUpdateAtom,
-} from '../../lib/atoms/currency'
-import { cn } from '../../lib/utils'
+} from '@/lib/atoms/currency'
+import { cn } from '@/lib/utils'
 import { useAtomValue } from 'jotai'
 import { TrendingUp, TrendingDown, RefreshCw, Clock } from 'lucide-react'
 

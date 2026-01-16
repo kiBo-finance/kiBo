@@ -1,4 +1,4 @@
-import { auth } from '../../../../lib/auth'
+import { auth } from '@/lib/auth'
 
 // CORS headers for cross-origin requests
 const corsHeaders = {

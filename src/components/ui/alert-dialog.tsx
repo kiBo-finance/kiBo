@@ -1,7 +1,7 @@
 'use client'
 
 import { buttonVariants } from './button'
-import { cn } from '../../lib/utils'
+import { cn } from '@/lib/utils'
 import {
   DialogTrigger as AriaDialogTrigger,
   Modal,

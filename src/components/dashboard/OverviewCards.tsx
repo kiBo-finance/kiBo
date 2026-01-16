@@ -1,8 +1,8 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { totalAssetsAtom, accountsAtom, cardsAtom } from '../../lib/atoms/accounts'
-import { transactionsAtom } from '../../lib/atoms/transactions'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { totalAssetsAtom, accountsAtom, cardsAtom } from '@/lib/atoms/accounts'
+import { transactionsAtom } from '@/lib/atoms/transactions'
 import { useAtomValue } from 'jotai'
 import { PiggyBank, CreditCard, TrendingUp, TrendingDown } from 'lucide-react'
 
