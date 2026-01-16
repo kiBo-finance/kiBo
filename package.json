@@ -24,6 +24,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/passkey": "^1.4.13",
     "@dinero.js/currencies": "^2.0.0-alpha.1",
     "@hookform/resolvers": "^5.2.1",
     "@prisma/client": "^6.15.0",

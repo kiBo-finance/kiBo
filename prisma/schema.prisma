@@ -23,7 +23,8 @@ model User {
   // better-auth関連
   sessions      Session[]
   accounts      Account[]
-  
+  passkeys      Passkey[]
+
   // アプリケーション関連リレーション
   appAccounts         AppAccount[]
   cards               Card[]
@@ -81,6 +82,25 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@map("verification_tokens")
+}
+
+// パスキー認証（WebAuthn/FIDO2）
+model Passkey {
+  id                  String   @id @default(cuid())
+  name                String?
+  publicKey           String
+  userId              String
+  credentialID        String   @unique
+  counter             Int
+  deviceType          String
+  backedUp            Boolean
+  transports          String?  // JSON配列としてシリアライズ
+  createdAt           DateTime @default(now())
+  aaguid              String?
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("passkeys")
 }
 
 // 通貨マスター

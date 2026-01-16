@@ -2,6 +2,7 @@ import { prisma } from './db'
 import { sendEmail } from './email'
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { passkey } from '@better-auth/passkey'
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -63,8 +64,33 @@ export const auth = betterAuth({
     process.env.BETTER_AUTH_URL || 'http://localhost:3000',
     'https://kibo.bktsk.com',
   ],
+  // OAuth プロバイダー設定（環境変数が設定されている場合のみ有効）
+  socialProviders: {
+    ...(process.env.GOOGLE_CLIENT_ID &&
+      process.env.GOOGLE_CLIENT_SECRET && {
+        google: {
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        },
+      }),
+    ...(process.env.GITHUB_CLIENT_ID &&
+      process.env.GITHUB_CLIENT_SECRET && {
+        github: {
+          clientId: process.env.GITHUB_CLIENT_ID,
+          clientSecret: process.env.GITHUB_CLIENT_SECRET,
+        },
+      }),
+  },
   plugins: [
-    // 将来的な拡張用
+    // パスキー認証（WebAuthn/FIDO2）
+    passkey({
+      rpName: 'kiBoアプリ',
+      rpID: process.env.NODE_ENV === 'production' ? 'kibo.bktsk.com' : 'localhost',
+      origin:
+        process.env.NODE_ENV === 'production'
+          ? 'https://kibo.bktsk.com'
+          : 'http://localhost:3000',
+    }),
   ],
 })
 
